@@ -7,179 +7,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
 
+
     <style>
-      html,
-      body {
-        font-family: sans-serif;
-        padding: 0;
-        margin: 0;
-        overflow: hidden;
-        height: 100%;
-      }
-
-      body {
-        font-family: "Raleway", sans-serif;
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: url("/static/images/mountain_photo_2.jpeg");
-        background-size: cover;
-      }
-      body:after {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        right: 0;
-        background: linear-gradient(
-          to top,
-          rgba(0, 0, 0, 0.25),
-          rgba(0, 0, 0, 0)
-        );
-      }
-
       .background-image {
-        z-index: 1;
-        position: absolute;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        right: 0;
-        filter: blur(7px);
         background: url("/static/images/mountain_photo_2.jpeg");
+        z-index: -10000;
         background-size: cover;
-        transition: 0.3s ease-out;
       }
-      .background-image:after {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        right: 0;
-        background: linear-gradient(
-          to top,
-          rgba(0, 0, 0, 0.25),
-          rgba(0, 0, 0, 0)
-        );
-      }
-
-      .form-wrapper {
-        width: 320px;
-        height: 720px;
-        border-radius: 25px;
-        background: #2f366d;
-        color: #fdf3f8;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        -webkit-transform: translate(-50%, -50%);
-        transform: translate(-50%, -50%);
-        overflow: hidden;
-        z-index: 10000;
-      }
-
-      .form-wrapper img {
-        height: 100%;
-        position: absolute;
-        top: 0;
-        left: -50%;
-        opacity: 0.3;
-        -webkit-filter: blur(3px);
-        filter: blur(3px);
-      }
-
-      .form-wrapper .content-wrapper {
+      .all-contents {
         position: relative;
-        opacity: 1;
-        width: 320px;
-        height: 500px;
-        display: -webkit-box;
-        display: -webkit-flex;
-        display: -ms-flexbox;
-        display: flex;
-        -webkit-flex-flow: column;
-        -ms-flex-flow: column;
-        flex-flow: column;
-        -webkit-box-pack: center;
-        -webkit-justify-content: center;
-        -ms-flex-pack: center;
-        justify-content: center;
-        -webkit-box-align: center;
-        -webkit-align-items: center;
-        -ms-flex-align: center;
-        align-items: center;
+        z-index: 9999;
       }
 
-      .form-login {
-        margin: 4rem auto;
+      label {
+        font-weight: bold;
       }
 
-      .form-login input {
-        margin: 5px auto;
-        display: block;
-        border-radius: 25px;
-        background: none;
-        color: rgba(253, 243, 248, 1);
-        border: 2px solid rgba(85, 112, 172, 0.8);
-        padding: 10px;
-        width: 200px;
-        font-weight: bolder;
-        -webkit-transition: all 0.3s ease;
-        transition: all 0.3s ease;
-      }
-
-      .form-login button {
-        width: 100%;
-        margin-top: 10px;
-        padding: 10px;
-        display: block;
-        font-weight: bolder;
-        color: #fdf3f8;
-        background: #ec6838;
-        border: none;
-        border-radius: 25px;
-        -webkit-transition: all 0.3s ease;
-        transition: all 0.3s ease;
-      }
-
-      .form-login input:focus {
-        outline: none;
-        color: rgba(253, 243, 248, 1);
-        background: rgba(85, 112, 172, 0.8);
-        border-width: 2px;
-        border-style: solid;
-        border-color: rgba(85, 112, 172, 0.8);
-      }
-
-      .form-login input:hover {
-        color: rgba(253, 243, 248, 1);
-        background: rgba(85, 112, 172, 0.8);
-        border-width: 2px;
-        border-style: solid;
-        border-color: rgba(85, 112, 172, 0.8);
-      }
-
-      .form-login button:hover {
-        cursor: pointer;
-        box-shadow: 0px 1px 10px 1px rgba(236, 104, 56, 0.6);
-      }
-
-      .form-wrapper .content-wrapper p {
-        font-size: 0.7rem;
-        color: rgba(223, 214, 217, 0.6);
-      }
-
-      .form-wrapper .content-wrapper a {
-        color: #fdf3f8;
-        text-decoration: none;
+      .title-text {
+        font-weight: bold;
       }
     </style>
 
     {{block "css" .}}
-
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css"
+      integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+      crossorigin="anonymous"
+    />
     {{
       end
     }}
@@ -188,11 +43,9 @@
     {{block "content" .}}
 
     {{ end }}
-
     {{block "js" .}}
 
     {{ end }}
-    <div class="background-image"></div>
   </body>
 </html>
 {{ end }}
