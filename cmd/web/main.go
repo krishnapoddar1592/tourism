@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Atul-Ranjan12/tourism/internal/config"
+	"github.com/Atul-Ranjan12/tourism/internal/driver"
 	"github.com/Atul-Ranjan12/tourism/internal/handlers"
 	"github.com/Atul-Ranjan12/tourism/internal/helpers"
 	"github.com/Atul-Ranjan12/tourism/internal/render"
@@ -20,10 +21,12 @@ var app config.AppConfig
 var session *scs.SessionManager
 
 func main() {
-	err := run()
+	db, err := run()
 	if err != nil {
-		log.Println("Error executing the run function")
+		log.Println("An unexpected error occured while initializing the database, quiting with error: ", err)
 	}
+	defer db.SQL.Close()
+
 	// TODO: Create and handle mailing channel
 
 	fmt.Println("Starting Server on localhost port", portNumber)
@@ -39,7 +42,9 @@ func main() {
 }
 
 // run handles major initialization processes for the app
-func run() error {
+func run() (*driver.DB, error) {
+	// Register Premitive Types for the Session (Variables the session needs to store)
+
 	// Set up configuration variable to not be in production mode
 	app.InProduction = false
 
@@ -57,23 +62,29 @@ func run() error {
 	app.Session = session
 
 	// TODO: Handle connection to the database in this section
+	log.Println("Connecting to database....")
+	db, err := driver.ConnectSQL("host=localhost port=5432 dbname=bookings user=atulranjan password=")
+	if err != nil {
+		log.Fatal("Cannot connect to the database, dyring..")
+	}
+	log.Println("Connected to the database")
 
 	// Handle creation of template cache
 	tc, err := render.CreateTemplateCache()
 	if err != nil {
 		log.Fatal("cannot create template cache")
-		return err
+		return nil, err
 	}
 	app.TemplateCache = tc
 	app.UseCache = true
 
 	// Create Handlers and Repository
-	repo := handlers.NewRepo(&app)
+	repo := handlers.NewRepo(&app, db)
 	handlers.NewHandlers(repo)
 
 	// Create Renderer and Helpers
 	render.NewRenderer(&app)
 	helpers.NewHelper(&app)
 
-	return nil
+	return db, nil
 }

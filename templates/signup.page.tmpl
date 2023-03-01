@@ -1,1 +1,31 @@
-This is the sign up page
+{{template "login" .}}
+
+{{define "content"}}
+<div class="form-wrapper">
+  <div class="content-wrapper">
+    <h1>Join us!</h1>
+    <form class="form-login">
+      <input
+        type="email"
+        name="email"
+        placeholder="Email address"
+        class="input-email"
+      />
+      <input
+        type="text"
+        name="username"
+        placeholder="Username"
+        class="input-username"
+      />
+      <input
+        type="password"
+        name="password"
+        placeholder="Password"
+        class="input-password"
+      />
+      <button type="submit" class="btn-login">SIGN UP</button>
+    </form>
+    <p>Got account? <a href="/login">Sign in</a></p>
+  </div>
+</div>
+{{ end }}

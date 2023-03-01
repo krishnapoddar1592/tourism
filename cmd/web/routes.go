@@ -23,5 +23,7 @@ func routes(app *config.AppConfig) http.Handler {
 	// SignUp Page Routes
 	mux.Get("/signup", handlers.Repo.ShowSignUp)
 
+	fileServer := http.FileServer(http.Dir("./static/"))
+	mux.Handle("/static/*", http.StripPrefix("/static", fileServer))
 	return mux
 }
