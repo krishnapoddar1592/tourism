@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/asaskevich/govalidator"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Defining a custom form struct
@@ -62,4 +63,26 @@ func (f *Form) IsEmailValid(key string) {
 // Returns true if there are no errors
 func (f *Form) Valid() bool {
 	return len(f.Errors) == 0
+}
+
+// Validate if the function is valid
+func (f *Form) IsPasswordValid(password, confirmPassword string) {
+	hash1, _ := bcrypt.GenerateFromPassword([]byte(password), 12)
+	hash2, _ := bcrypt.GenerateFromPassword([]byte(confirmPassword), 12)
+
+	if string(hash1) != string(hash2) {
+		f.Errors.Add(confirmPassword, "Password not matching")
+		return
+	} else {
+		return
+	}
+}
+
+// Check if user has checked the box
+func (f *Form) HasUserAccepted(key string) {
+	if f.Get(key) == "agreed" {
+		return
+	} else {
+		f.Errors.Add(key, "Have to agree to the terms of service")
+	}
 }

@@ -7,12 +7,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
 
-
     <style>
       .background-image {
-        background: url("/static/images/mountain_photo_2.jpeg");
-        z-index: -10000;
-        background-size: cover;
+        background-image: url("/static/images/mountain_photo_2.jpeg");
+        background-size: coveer;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        height: 120vh;
+      }
+
+      @media screen and (max-width: 600px) {
+        .background-image {
+          background-size: coveer;
+          background-position: center;
+          background-repeat: no-repeat;
+          background-attachment: fixed;
+          height: 170vh;
+        }
+      }
+
+      @media screen and (max-width: 400px) {
+        .background-image {
+          background-size: coveer;
+          background-position: center;
+          background-repeat: no-repeat;
+          background-attachment: fixed;
+          height: 200vh;
+        }
+      }
+
+      @media screen and (max-width: 300px) {
+        .background-image {
+          background-size: coveer;
+          background-position: center;
+          background-repeat: no-repeat;
+          background-attachment: fixed;
+          height: 250vh;
+        }
+      }
+
+      .contents {
+        overflow-x: hidden;
+        overflow-y: hidden;
       }
       .all-contents {
         position: relative;
@@ -27,6 +64,14 @@
         font-weight: bold;
       }
     </style>
+
+    <link rel="stylesheet" href="/static/admin/css/style.css" />
+    <link rel="shortcut icon" href="/static/admin/images/favicon.png" />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://unpkg.com/notie/dist/notie.min.css"
+    />
 
     {{block "css" .}}
     <link
@@ -43,9 +88,70 @@
     {{block "content" .}}
 
     {{ end }}
+
+    <script src="/static/js/app.js"></script>
+    <script src="https://unpkg.com/notie"></script>
+    <script src="https://unpkg.com/notie"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.1/dist/sweetalert2.all.min.js"></script>
     {{block "js" .}}
 
     {{ end }}
+
+    <script>
+      let attention = Prompt();
+
+      (function () {
+        "use strict";
+
+        // Fetch all the forms we want to apply custom Bootstrap validation styles to
+        var forms = document.querySelectorAll("needs-validation");
+
+        // Loop over them and prevent submission
+        Array.prototype.slice.call(forms).forEach(function (form) {
+          form.addEventListener(
+            "submit",
+            function (event) {
+              if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+              }
+
+              form.classList.add("was-validated");
+            },
+            false
+          );
+        });
+      })();
+
+      function notify(msg, alertType) {
+        notie.alert({
+          type: alertType,
+          text: msg,
+        });
+      }
+
+
+      function notifyModal(title, text, icon, button) {
+        Swal.fire({
+          title: title,
+          text: text,
+          icon: icon,
+          button: button,
+        });
+      }
+
+      {{with .Error}}
+        notify("{{.}}", "error");
+      {{end}}
+
+      {{with .Flash}}
+        notify("{{.}}", "success")
+      {{end}}
+
+      {{with .Warning}}
+        notify("{{.}}", "warning")
+      {{end}}
+    </script>
   </body>
 </html>
 {{ end }}
