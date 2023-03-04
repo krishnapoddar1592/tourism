@@ -1,1 +1,1 @@
-sql("drop table merchants")
+sql("drop table users")

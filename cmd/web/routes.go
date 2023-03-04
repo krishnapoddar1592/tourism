@@ -25,7 +25,22 @@ func routes(app *config.AppConfig) http.Handler {
 	mux.Get("/signup", handlers.Repo.ShowSignUp)
 	mux.Post("/signup", handlers.Repo.PostSignUp)
 
+	// User logout
+	mux.Get("/logout", handlers.Repo.Logout)
+
 	fileServer := http.FileServer(http.Dir("./static/"))
 	mux.Handle("/static/*", http.StripPrefix("/static", fileServer))
+
+	// TODO: Set up Routes for Logged In Users
+	mux.Route("/merchant", func(mux chi.Router) {
+		// Check if user is authenticated
+		mux.Use(Auth)
+
+		mux.Get("/{src}/dashboard", handlers.Repo.ShowAdminDashboard)
+		mux.Get("/{src}/verification", handlers.Repo.ShowAdminVerification)
+		mux.Post("/{src}/verification", handlers.Repo.PostShowAdminVerification)
+		mux.Get("/{src}/verification-address", handlers.Repo.PostShowAdminAddress)
+	})
+
 	return mux
 }

@@ -1,4 +1,4 @@
-create_table("merchants") {
+create_table("users") {
   t.Column("id", "integer", {primary: true})
   t.Column("first_name", "string", {"default": ""})
   t.Column("last_name", "string", {"default": ""})
@@ -6,10 +6,6 @@ create_table("merchants") {
   t.Column("password", "string", {"size": 60})
   t.Column("age", "integer", {})
   t.Column("gender", "string", {})
-  t.Column("address_id", "integer", {})
   t.Column("access_level", "integer", {"default": 1})
   t.Column("phone_number", "string", {"default": ""})
-  t.Column("document_id", "integer", {})
-  t.Column("document_number", "string", {})
-  t.Column("pan_number", "string", {})
 }

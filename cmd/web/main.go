@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/gob"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	"github.com/Atul-Ranjan12/tourism/internal/driver"
 	"github.com/Atul-Ranjan12/tourism/internal/handlers"
 	"github.com/Atul-Ranjan12/tourism/internal/helpers"
+	"github.com/Atul-Ranjan12/tourism/internal/models"
 	"github.com/Atul-Ranjan12/tourism/internal/render"
 	"github.com/alexedwards/scs/v2"
 )
@@ -26,8 +28,10 @@ func main() {
 		log.Println("An unexpected error occured while initializing the database, quiting with error: ", err)
 	}
 	defer db.SQL.Close()
-
-	// TODO: Create and handle mailing channel
+	// Close the Mailing Channel
+	defer close(app.MailChan)
+	fmt.Println("Starting Mailing Channel...")
+	listenForMail()
 
 	fmt.Println("Starting Server on localhost port", portNumber)
 
@@ -44,6 +48,11 @@ func main() {
 // run handles major initialization processes for the app
 func run() (*driver.DB, error) {
 	// Register Premitive Types for the Session (Variables the session needs to store)
+	gob.Register(models.User{})
+
+	// Set up Channel to send the mail
+	mailChan := make(chan models.ConfirmationMailData)
+	app.MailChan = mailChan
 
 	// Set up configuration variable to not be in production mode
 	app.InProduction = false
@@ -63,9 +72,9 @@ func run() (*driver.DB, error) {
 
 	// TODO: Handle connection to the database in this section
 	log.Println("Connecting to database....")
-	db, err := driver.ConnectSQL("host=localhost port=5432 dbname=bookings user=atulranjan password=")
+	db, err := driver.ConnectSQL("host=localhost port=5432 dbname=tourism user=atulranjan password=")
 	if err != nil {
-		log.Fatal("Cannot connect to the database, dyring..")
+		log.Fatal("Cannot connect to the database, dying..")
 	}
 	log.Println("Connected to the database")
 

@@ -1,1 +1,0 @@
-drop_foreign_key("merchants", "merchants_merchant_address_id_fk", {})

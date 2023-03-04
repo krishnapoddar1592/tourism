@@ -65,16 +65,39 @@ func (f *Form) Valid() bool {
 	return len(f.Errors) == 0
 }
 
-// Validate if the function is valid
-func (f *Form) IsPasswordValid(password, confirmPassword string) {
-	hash1, _ := bcrypt.GenerateFromPassword([]byte(password), 12)
-	hash2, _ := bcrypt.GenerateFromPassword([]byte(confirmPassword), 12)
+// Funtion to hash the password
+func HashPassword(password string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), 12)
+	if err != nil {
+		return "", err
+	}
+	return string(hash), nil
+}
 
-	if string(hash1) != string(hash2) {
-		f.Errors.Add(confirmPassword, "Password not matching")
-		return
-	} else {
-		return
+// Validate if the function is valid
+// func (f *Form) IsPasswordValid(password, confirmPassword string) (string, error) {
+// 	// hash, _ := bcrypt.GenerateFromPassword([]byte(f.Get(password)), 12)
+// 	hash, _ := HashPassword(password)
+
+// 	err := bcrypt.CompareHashAndPassword(hash, []byte(f.Get(confirmPassword)))
+// 	if err == bcrypt.ErrMismatchedHashAndPassword {
+// 		log.Println("Password Mismatch")
+// 		f.Errors.Add(confirmPassword, "Password does not match")
+// 		return "", err
+// 	} else if err != nil {
+// 		log.Println("Unexpected Error")
+// 		f.Errors.Add(confirmPassword, "Unexpected Error")
+// 		return "", err
+// 	}
+
+// 	return string(hash), nil
+// }
+
+// Check if password and confirmPassword are the same
+func (f *Form) IsPasswordValid(password, confirmPassword string) {
+	if f.Get(password) != f.Get(confirmPassword) {
+		f.Errors.Add(password, "Password and confirm password must be the same")
+		f.Errors.Add(confirmPassword, "Password and confirm password must be the same")
 	}
 }
 
@@ -85,4 +108,19 @@ func (f *Form) HasUserAccepted(key string) {
 	} else {
 		f.Errors.Add(key, "Have to agree to the terms of service")
 	}
+}
+
+// Helper function to check if the email exist
+func (f *Form) FormValidateUser(key string, value bool) {
+	if value {
+		f.Errors.Add(key, "User already Exists, unable to create accont")
+		return
+	} else {
+		return
+	}
+}
+
+// Function to add the verification error for the code
+func (f *Form) AddVerificationError() {
+	f.Errors.Add("verification_code", "Verification Code is not the same")
 }
