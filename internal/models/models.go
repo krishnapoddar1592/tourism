@@ -31,3 +31,13 @@ type ConfirmationMailData struct {
 	Subject string
 	Content string
 }
+
+type MerchantAddress struct {
+	City         string
+	State        string
+	Country      string
+	AddressLine1 string
+	AddressLine2 string
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+}

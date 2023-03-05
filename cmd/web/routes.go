@@ -37,9 +37,17 @@ func routes(app *config.AppConfig) http.Handler {
 		mux.Use(Auth)
 
 		mux.Get("/{src}/dashboard", handlers.Repo.ShowAdminDashboard)
+
+		// Verification Code :: Stage 1
 		mux.Get("/{src}/verification", handlers.Repo.ShowAdminVerification)
 		mux.Post("/{src}/verification", handlers.Repo.PostShowAdminVerification)
-		mux.Get("/{src}/verification-address", handlers.Repo.PostShowAdminAddress)
+
+		// Address Verification :: Stage 2
+		mux.Get("/{src}/verification-address", handlers.Repo.ShowAdminAddress)
+		mux.Post("/{src}/verification-address", handlers.Repo.PostShowAdminAddress)
+
+		// Document Verificaiotn :: Stage 3
+		mux.Get("/{src}/verification-documents", handlers.Repo.ShowDocumentsVerification)
 	})
 
 	return mux

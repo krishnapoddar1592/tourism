@@ -104,9 +104,15 @@ func (m *Repository) PostLogin(w http.ResponseWriter, r *http.Request) {
 	if user.IsVerified > 2 {
 		// User is verified
 		http.Redirect(w, r, fmt.Sprintf("/merchant/%d/dashboard", id), http.StatusSeeOther)
-	} else {
-		// User is not verified
+	} else if user.IsVerified == 0 {
+		// User is not verified :: initial
 		http.Redirect(w, r, fmt.Sprintf("/merchant/%d/verification", id), http.StatusSeeOther)
+	} else if user.IsVerified == 1 {
+		// User has completed one step of verification
+		http.Redirect(w, r, fmt.Sprintf("/merchant/%d/verification-address", id), http.StatusSeeOther)
+	} else {
+		// User has completed two levels of verification
+		http.Redirect(w, r, fmt.Sprintf("/merchant/%d/verification-documents", id), http.StatusSeeOther)
 	}
 	//TODO: Create Administrative Pages and Dashboards
 	//TODO: Data Breach for Password FIX
@@ -328,13 +334,77 @@ func (m *Repository) PostShowAdminVerification(w http.ResponseWriter, r *http.Re
 }
 
 // Handler for the show address page
-func (m *Repository) PostShowAdminAddress(w http.ResponseWriter, r *http.Request) {
+func (m *Repository) ShowAdminAddress(w http.ResponseWriter, r *http.Request) {
 	currentUser := m.App.Session.Get(r.Context(), "user_details").(models.User)
 	// Passing the Current User Details to the template data:
 	data := make(map[string]interface{})
 	data["user_details"] = currentUser
 
 	render.Template(w, r, "merchant-verification-address.page.tmpl", &models.TemplateData{
+		Data: data,
+		Form: forms.New(nil),
+	})
+}
+
+// PostSHowAddress Handles When the user posts the address
+func (m *Repository) PostShowAdminAddress(w http.ResponseWriter, r *http.Request) {
+	// Prevents session attacks
+	_ = m.App.Session.RenewToken(r.Context())
+
+	// Get the suer from the session
+	currentUser := m.App.Session.Get(r.Context(), "user_details").(models.User)
+
+	// Add data to the template
+	data := make(map[string]interface{})
+	data["user_details"] = currentUser
+
+	// Parse the form
+	err := r.ParseForm()
+	if err != nil {
+		m.App.Session.Put(r.Context(), "error", "Can't parse form")
+		http.Redirect(w, r, "/signup", http.StatusTemporaryRedirect)
+		return
+	}
+
+	// Make the address
+	merchantAddress := models.MerchantAddress{
+		City:         r.Form.Get("city"),
+		State:        r.Form.Get("state"),
+		Country:      r.Form.Get("country"),
+		AddressLine1: r.Form.Get("address1"),
+		AddressLine2: r.Form.Get("address2"),
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
+	}
+
+	// Add the address to the database
+	err = m.DB.AddMerchantAddress(merchantAddress)
+	if err != nil {
+		log.Println("ERROR: Error adding merchant address :: error: ", err)
+		return
+	}
+
+	// Everything is working
+	// Increament the verification level by 1
+	err = m.DB.IncrementVerification(currentUser)
+	if err != nil {
+		log.Println("ERROR: Inceamenting Merchant Verification", err)
+		return
+	}
+
+	// Redirect to a new page
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
+}
+
+// Function to show the documents verification page
+func (m *Repository) ShowDocumentsVerification(w http.ResponseWriter, r *http.Request) {
+	log.Println("Reached Here")
+	currentUser := m.App.Session.Get(r.Context(), "user_details").(models.User)
+	// Passing the Current User Details to the template data:
+	data := make(map[string]interface{})
+	data["user_details"] = currentUser
+
+	render.Template(w, r, "merchant-verification-documents.page.tmpl", &models.TemplateData{
 		Data: data,
 		Form: forms.New(nil),
 	})

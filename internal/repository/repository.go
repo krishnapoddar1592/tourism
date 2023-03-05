@@ -10,4 +10,5 @@ type DatabaseRepo interface {
 	UserExists(email string) (bool, error)
 	GetVerificationCode(user models.User) (int, error)
 	IncrementVerification(user models.User) error
+	AddMerchantAddress(address models.MerchantAddress) error
 }

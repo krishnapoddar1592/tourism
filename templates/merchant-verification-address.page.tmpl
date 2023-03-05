@@ -17,45 +17,68 @@
     <input type="hidden" name="csrf_token" value="{{.CSRFToken}}" />
 
     <div class="form-group mt-5">
-      <div>
-        <strong><label for="city">City: </label></strong>
+      <div class="row">
+        <div class="col">
+          <strong><label for="city">City: </label></strong>
+          <input
+            type="text"
+            name="city"
+            id="city"
+            autocomplete="off"
+            class="form-control form-control-lg"
+          />
+        </div>
+        <div class="col">
+          <strong><label for="state">State: </label></strong>
+          <input
+            type="text"
+            name="state"
+            id="state"
+            autocomplete="off"
+            class="form-control form-control-lg"
+          />
+        </div>
+        <div class="col">
+          <strong><label for="country">Country: </label></strong>
+          <input
+            type="text"
+            name="country"
+            id="country"
+            autocomplete="off"
+            class="form-control form-control-lg"
+          />
+        </div>
+      </div>
+      <div class="row mt-5">
+        <div class="col">
+          <strong><label for="address1">Address Line 1: </label></strong>
+          <input
+            type="text"
+            name="address1"
+            id="address1"
+            autocomplete="off"
+            class="form-control form-control-lg"
+          />
+        </div>
+        <div class="col">
+          <strong><label for="address1">Address Line 2: </label></strong>
+          <input
+            type="text"
+            name="address2"
+            id="address2"
+            autocomplete="off"
+            class="form-control form-control-lg"
+          />
+        </div>
+      </div>
+      <div class="row mt-5">
+        <hr />
         <input
-          type="text"
-          name="city"
-          id="city"
-          autocomplete="off"
-          class="form-control form-control-lg col-md-3"
+          type="submit"
+          class="btn btn-success btn-lg col-md-6"
+          value="Verify!"
         />
       </div>
-
-      <div>
-        <strong><label for="state">State: </label></strong>
-        <input
-          type="text"
-          name="state"
-          id="state"
-          autocomplete="off"
-          class="form-control form-control-lg col-md-3"
-        />
-      </div>
-
-      <div>
-        <strong><label for="country">Country: </label></strong>
-        <input
-          type="text"
-          name="country"
-          id="country"
-          autocomplete="off"
-          class="form-control form-control-lg col-md-3"
-        />
-      </div>
-
-      <hr />
-      <input
-        type="submit"
-        class="btn btn-success btn-lg col-md-6"
-        value="Verify!"
-      />
     </div>
   </form>
 </div>

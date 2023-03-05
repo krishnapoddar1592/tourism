@@ -111,6 +111,7 @@ func (m *PostgresDBRepo) Authenticate(email, testPassword string) (int, string, 
 	return id, hashedPassword, nil
 }
 
+// Function to find the user by ID
 func (m *PostgresDBRepo) FindUserByID(id int) (models.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -156,6 +157,7 @@ func (m *PostgresDBRepo) IncrementVerification(user models.User) error {
 	return nil
 }
 
+// Funciton to get the verification code from the user
 func (m *PostgresDBRepo) GetVerificationCode(user models.User) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -175,4 +177,31 @@ func (m *PostgresDBRepo) GetVerificationCode(user models.User) (int, error) {
 	}
 
 	return verificationCode, err
+}
+
+// Function to add the merchant address to the database
+func (m *PostgresDBRepo) AddMerchantAddress(address models.MerchantAddress) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `
+		INSERT INTO merchant_address (city, state, country, address_line_1, address_line_2, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+	`
+
+	_, err := m.DB.QueryContext(ctx, query,
+		address.City,
+		address.State,
+		address.Country,
+		address.AddressLine1,
+		address.AddressLine2,
+		address.CreatedAt,
+		address.UpdatedAt,
+	)
+	if err != nil {
+		log.Println("Error executing query: Inserting into merchant_address")
+		return err
+	}
+
+	return nil
 }
