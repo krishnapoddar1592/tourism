@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
@@ -47,7 +48,6 @@ func NewHandlers(r *Repository) {
 }
 
 func (m *Repository) ShowLogin(w http.ResponseWriter, r *http.Request) {
-
 	render.Template(w, r, "login.page.tmpl", &models.TemplateData{
 		Form: forms.New(nil),
 	})
@@ -110,7 +110,7 @@ func (m *Repository) PostLogin(w http.ResponseWriter, r *http.Request) {
 	} else if user.IsVerified == 1 {
 		// User has completed one step of verification
 		http.Redirect(w, r, fmt.Sprintf("/merchant/%d/verification-address", id), http.StatusSeeOther)
-	} else {
+	} else if user.IsVerified == 2 {
 		// User has completed two levels of verification
 		http.Redirect(w, r, fmt.Sprintf("/merchant/%d/verification-documents", id), http.StatusSeeOther)
 	}
@@ -339,6 +339,15 @@ func (m *Repository) ShowAdminAddress(w http.ResponseWriter, r *http.Request) {
 	// Passing the Current User Details to the template data:
 	data := make(map[string]interface{})
 	data["user_details"] = currentUser
+	data["merchant_address"] = models.MerchantAddress{
+		City:         "",
+		State:        "",
+		Country:      "",
+		AddressLine1: "",
+		AddressLine2: "",
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
+	}
 
 	render.Template(w, r, "merchant-verification-address.page.tmpl", &models.TemplateData{
 		Data: data,
@@ -351,7 +360,7 @@ func (m *Repository) PostShowAdminAddress(w http.ResponseWriter, r *http.Request
 	// Prevents session attacks
 	_ = m.App.Session.RenewToken(r.Context())
 
-	// Get the suer from the session
+	// Get the user from the session
 	currentUser := m.App.Session.Get(r.Context(), "user_details").(models.User)
 
 	// Add data to the template
@@ -375,6 +384,19 @@ func (m *Repository) PostShowAdminAddress(w http.ResponseWriter, r *http.Request
 		AddressLine2: r.Form.Get("address2"),
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
+		UserID:       currentUser.ID,
+	}
+
+	form := forms.New(r.PostForm)
+	form.Required("city", "state", "country", "address1", "address2")
+
+	if !form.Valid() {
+		data["merchant_address"] = merchantAddress
+		render.Template(w, r, "merchant-verification-address.page.tmpl", &models.TemplateData{
+			Form: form,
+			Data: data,
+		})
+		return
 	}
 
 	// Add the address to the database
@@ -391,14 +413,16 @@ func (m *Repository) PostShowAdminAddress(w http.ResponseWriter, r *http.Request
 		log.Println("ERROR: Inceamenting Merchant Verification", err)
 		return
 	}
+	// Increment count of the user
+	currentUser.IsVerified++
+	m.App.Session.Put(r.Context(), "user_details", currentUser)
 
 	// Redirect to a new page
-	http.Redirect(w, r, "/login", http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/merchant/%d/verification-documents", currentUser.ID), http.StatusSeeOther)
 }
 
 // Function to show the documents verification page
 func (m *Repository) ShowDocumentsVerification(w http.ResponseWriter, r *http.Request) {
-	log.Println("Reached Here")
 	currentUser := m.App.Session.Get(r.Context(), "user_details").(models.User)
 	// Passing the Current User Details to the template data:
 	data := make(map[string]interface{})
@@ -408,4 +432,267 @@ func (m *Repository) ShowDocumentsVerification(w http.ResponseWriter, r *http.Re
 		Data: data,
 		Form: forms.New(nil),
 	})
+}
+
+func (m *Repository) PostShowDocumentsVerification(w http.ResponseWriter, r *http.Request) {
+	// Prevents session attacks
+	_ = m.App.Session.RenewToken(r.Context())
+
+	// Get the suer from the session
+	currentUser := m.App.Session.Get(r.Context(), "user_details").(models.User)
+
+	// Add data to the template
+	data := make(map[string]interface{})
+	data["user_details"] = currentUser
+
+	// Dealing with the image first
+	r.ParseMultipartForm(32 << 20)
+	file, handler, err := r.FormFile("image")
+	if err != nil {
+		log.Println("Error getting the file", err)
+		m.App.Session.Put(r.Context(), "error", "No file was uploaded")
+		render.Template(w, r, "merchant-verification-documents.page.tmpl", &models.TemplateData{
+			Data: data,
+			Form: forms.New(nil),
+		})
+		return
+	}
+	defer file.Close()
+
+	if !forms.IsValidFileSize(handler) {
+		m.App.Session.Put(r.Context(), "error", "File Size should not be greater than 300 KB")
+		render.Template(w, r, "merchant-verification-documents.page.tmpl", &models.TemplateData{
+			Data: data,
+			Form: forms.New(nil),
+		})
+		return
+	}
+
+	// The final Image to be uploaded to the database
+	imageData, err := ioutil.ReadAll(file)
+	if err != nil {
+		log.Println("Error loading the image file into bytes")
+		return
+	}
+
+	// Get the DocumentID as well
+	err = r.ParseForm()
+	if err != nil {
+		log.Println("Error parsing form")
+	}
+	merchantDocument := models.MerchantDocument{
+		DocumentID:   r.Form.Get("documentID"),
+		DocumentLink: "testlink",
+		ImageFile:    imageData,
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
+		UserID:       currentUser.ID,
+	}
+	form := forms.New(r.PostForm)
+	form.Required("documentID")
+
+	if !form.Valid() {
+		render.Template(w, r, "merchant-verification-documents.page.tmpl", &models.TemplateData{
+			Form: form,
+			Data: data,
+		})
+		return
+	}
+
+	// Insert merchant document into the database
+	documentID, err := m.DB.AddMerchantDocuments(merchantDocument)
+	if err != nil {
+		log.Println("Error adding merchant documents: ", err)
+		return
+	}
+
+	// Increament the verification level of the merchant
+	err = m.DB.IncrementVerification(currentUser)
+	if err != nil {
+		log.Println("ERROR: Inceamenting Merchant Verification", err)
+		return
+	}
+
+	// Add a New Merchant to the Merchants Table
+	// 1. Get the Address ID from the User ID
+	userAddressID, err := m.DB.GetAddressIDFromUser(currentUser.ID)
+	if err != nil {
+		log.Println("Error getting address ID: ", err)
+		return
+	}
+
+	newMerchant := models.MerchantData{
+		UserID:     currentUser.ID,
+		AddressID:  userAddressID,
+		DocumentID: documentID,
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
+	}
+	// Add the New merchant to the table
+	err = m.DB.AddMerchant(newMerchant)
+	if err != nil {
+		log.Println("Error adding the merchant: ", err)
+		return
+	}
+
+	mailMessage := fmt.Sprintf(`
+		<h2><strong>Email Verification </strong></h2> <br>
+		Dear %s, <br>
+		<h4>Congratulations! </h4> <br>
+		Your Account has succesfully been verified as a Merchant of TourNepal <br>
+		<br><br><br>
+		Yours Sincerely, <br>
+		TourNepal Inc
+	`, currentUser.FirstName)
+
+	msg := models.ConfirmationMailData{
+		To:      currentUser.Email,
+		From:    "info@tournepal.com",
+		Subject: "Succesful Account Verification",
+		Content: mailMessage,
+	}
+
+	// Send the email to the user:
+	m.App.MailChan <- msg
+
+	// Destroy the session
+	_ = m.App.Session.Destroy(r.Context())
+	m.App.Session.RenewToken(r.Context())
+
+	// Redirecting to the merchant dashboard
+	m.App.Session.Put(r.Context(), "flash", "Please login again")
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
+}
+
+// Shows an item merchant page
+func (m *Repository) AdminAddMerchantItems(w http.ResponseWriter, r *http.Request) {
+	currentUser := m.App.Session.Get(r.Context(), "user_details").(models.User)
+	stringMap := make(map[string]string)
+	stringMap["user_name"] = currentUser.FirstName + " " + currentUser.LastName
+
+	// Passing the Current User Details to the template data:
+	data := make(map[string]interface{})
+	data["user_details"] = currentUser
+
+	// Get the merchant ID
+	merchantID, err := m.DB.GetMerchantIDFromUserID(currentUser.ID)
+	if err != nil {
+		log.Println("Error getting merchant ID")
+		return
+	}
+
+	// Add all the portfolio information to the template data
+	buses, err := m.DB.GetAllBus(merchantID)
+	if err != nil {
+		log.Println("Error getting all the bus data", err)
+	}
+	data["bus"] = buses
+
+	render.Template(w, r, "add-merchant-item.page.tmpl", &models.TemplateData{
+		StringMap: stringMap,
+		Data:      data,
+	})
+}
+
+// This funciton shows the add bus page
+func (m *Repository) AdminAddBus(w http.ResponseWriter, r *http.Request) {
+
+	currentUser := m.App.Session.Get(r.Context(), "user_details").(models.User)
+	stringMap := make(map[string]string)
+	stringMap["user_name"] = currentUser.FirstName + " " + currentUser.LastName
+
+	// Passing the Current User Details to the template data:
+	data := make(map[string]interface{})
+	busDetails := models.AddBusData{
+		BusName:     "",
+		BusModel:    "",
+		BusAddress:  "",
+		BusStart:    "",
+		BusEnd:      "",
+		BusNumSeats: 0,
+		BusNumPlate: "",
+		BusPAN:      "",
+	}
+
+	data["user_details"] = currentUser
+	data["bus_reg"] = busDetails
+	render.Template(w, r, "add-bus.page.tmpl", &models.TemplateData{
+		StringMap: stringMap,
+		Data:      data,
+		Form:      forms.New(nil),
+	})
+}
+
+// This function handles the Post functionality of the page
+func (m *Repository) PostAdminAddBus(w http.ResponseWriter, r *http.Request) {
+	log.Println("Post Fucntion was called")
+	// Prevents session attacks
+	_ = m.App.Session.RenewToken(r.Context())
+
+	// Get the suer from the session
+	currentUser := m.App.Session.Get(r.Context(), "user_details").(models.User)
+
+	// Add data to the template
+	data := make(map[string]interface{})
+	data["user_details"] = currentUser
+
+	// make stringmap
+	stringMap := make(map[string]string)
+
+	// Form Validattion:
+	err := r.ParseForm()
+	if err != nil {
+		log.Println("ERROR: An unexpected Error occured while parsing the form")
+	}
+
+	// 1. Form Validation
+	// Validate the form
+	form := forms.New(r.PostForm)
+
+	// Make the bus details model
+	merchantID, err := m.DB.GetMerchantIDFromUserID(currentUser.ID)
+	if err != nil {
+		log.Println("Error getting merchantID: ", err)
+		return
+	}
+
+	numSeats := form.ConvertToInt("bus_seats")
+
+	busDetails := models.AddBusData{
+		MerchantID:  merchantID,
+		BusName:     r.Form.Get("bus_name"),
+		BusModel:    r.Form.Get("bus_model"),
+		BusAddress:  r.Form.Get("office_address"),
+		BusStart:    r.Form.Get("bus_start"),
+		BusEnd:      r.Form.Get("bus_end"),
+		BusNumSeats: numSeats,
+		BusNumPlate: r.Form.Get("bus_no_plate"),
+		BusPAN:      r.Form.Get("bus_pan"),
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}
+
+	form.Required("bus_name", "bus_model", "office_address", "bus_start", "bus_end", "bus_seats", "bus_no_plate", "bus_pan")
+	form.HasUserAccepted("agreed")
+
+	if !form.Valid() {
+		data["bus_reg"] = busDetails
+		render.Template(w, r, "add-bus.page.tmpl", &models.TemplateData{
+			StringMap: stringMap,
+			Data:      data,
+			Form:      form,
+		})
+		return
+	}
+
+	// 2. Add the Bus Details to the database
+	err = m.DB.AddBusToDatabase(busDetails)
+	if err != nil {
+		log.Println("Error adding bus details to the bus table")
+		return
+	}
+
+	// 4. Redirect the User
+	log.Println("Succesful completion of the form submission")
+	http.Redirect(w, r, fmt.Sprintf("/merchant/%d/merchant-add-items", currentUser.ID), http.StatusSeeOther)
 }

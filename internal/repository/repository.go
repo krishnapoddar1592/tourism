@@ -11,4 +11,10 @@ type DatabaseRepo interface {
 	GetVerificationCode(user models.User) (int, error)
 	IncrementVerification(user models.User) error
 	AddMerchantAddress(address models.MerchantAddress) error
+	AddMerchantDocuments(docs models.MerchantDocument) (int, error)
+	AddMerchant(mer models.MerchantData) error
+	GetAddressIDFromUser(userID int) (int, error)
+	GetMerchantIDFromUserID(userID int) (int, error)
+	AddBusToDatabase(bus models.AddBusData) error
+	GetAllBus(merchantID int) ([]models.AddBusData, error)
 }

@@ -48,6 +48,15 @@ func routes(app *config.AppConfig) http.Handler {
 
 		// Document Verificaiotn :: Stage 3
 		mux.Get("/{src}/verification-documents", handlers.Repo.ShowDocumentsVerification)
+		mux.Post("/{src}/verification-documents", handlers.Repo.PostShowDocumentsVerification)
+
+		// Merchant Dashboard Items
+		// Merchant Add item Seciotn
+		mux.Get("/{src}/merchant-add-items", handlers.Repo.AdminAddMerchantItems)
+
+		// Merchant Add Bus Section:
+		mux.Get("/{src}/add-bus", handlers.Repo.AdminAddBus)
+		mux.Post("/{src}/add-bus", handlers.Repo.PostAdminAddBus)
 	})
 
 	return mux

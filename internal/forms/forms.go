@@ -2,8 +2,10 @@ package forms
 
 import (
 	"fmt"
+	"mime/multipart"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/asaskevich/govalidator"
@@ -113,7 +115,7 @@ func (f *Form) HasUserAccepted(key string) {
 // Helper function to check if the email exist
 func (f *Form) FormValidateUser(key string, value bool) {
 	if value {
-		f.Errors.Add(key, "User already Exists, unable to create accont")
+		f.Errors.Add(key, "User already Exists, unable to create account")
 		return
 	} else {
 		return
@@ -123,4 +125,21 @@ func (f *Form) FormValidateUser(key string, value bool) {
 // Function to add the verification error for the code
 func (f *Form) AddVerificationError() {
 	f.Errors.Add("verification_code", "Verification Code is not the same")
+}
+
+// Function to check if the image file is less than 200 kb
+func IsValidFileSize(handler *multipart.FileHeader) bool {
+	return handler.Size <= 300*1024
+}
+
+// Funciton to validate if the field is an integer, if yes return the value
+func (f *Form) ConvertToInt(key string) int {
+	value := f.Get(key)
+	valueInt, err := strconv.Atoi(value)
+	if err != nil {
+		f.Errors.Add(key, "The Value you entered is not an integer")
+		return 0
+	} else {
+		return valueInt
+	}
 }
