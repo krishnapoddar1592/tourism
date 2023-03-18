@@ -28,6 +28,11 @@ func routes(app *config.AppConfig) http.Handler {
 	// User logout
 	mux.Get("/logout", handlers.Repo.Logout)
 
+	// Reservation Section
+	// 1. Bus Reservation
+	mux.Get("/make-bus-reservation", handlers.Repo.MakeBusReservation)
+	mux.Post("/make-bus-reservation", handlers.Repo.PostMakeBusReservation)
+
 	fileServer := http.FileServer(http.Dir("./static/"))
 	mux.Handle("/static/*", http.StripPrefix("/static", fileServer))
 
@@ -57,6 +62,13 @@ func routes(app *config.AppConfig) http.Handler {
 		// Merchant Add Bus Section:
 		mux.Get("/{src}/add-bus", handlers.Repo.AdminAddBus)
 		mux.Post("/{src}/add-bus", handlers.Repo.PostAdminAddBus)
+
+		// Merchant SHow and Edit Bus section
+		mux.Get("/{src}/add-bus/{id}", handlers.Repo.AdminShowBus)
+		mux.Post("/{src}/add-bus/{id}", handlers.Repo.PostAdminUpdateBus)
+
+		// Delete the bus
+		mux.Get("/{src}/add-bus/delete/{id}", handlers.Repo.PostAdminDeleteBus)
 	})
 
 	return mux

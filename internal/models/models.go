@@ -62,6 +62,7 @@ type MerchantData struct {
 
 // Type to add the bus form
 type AddBusData struct {
+	BusID       int
 	MerchantID  int
 	BusName     string
 	BusModel    string
@@ -73,4 +74,17 @@ type AddBusData struct {
 	BusPAN      string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
+}
+
+// Bus Reservation Model
+type BusReservationData struct {
+	BusID           int
+	ReservationDate time.Time
+	NumPassengers   int
+	From            string
+	Stop            string
+	PhoneNumber     string
+	Email           string
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
 }

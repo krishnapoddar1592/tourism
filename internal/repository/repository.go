@@ -17,4 +17,8 @@ type DatabaseRepo interface {
 	GetMerchantIDFromUserID(userID int) (int, error)
 	AddBusToDatabase(bus models.AddBusData) error
 	GetAllBus(merchantID int) ([]models.AddBusData, error)
+	GetBusByID(busID int) (models.AddBusData, error)
+	UpdateBusInfo(busID int, i models.AddBusData) error
+	DeleteBusByID(busID int) error
+	MakeBusReservation(busRes models.BusReservationData) error
 }

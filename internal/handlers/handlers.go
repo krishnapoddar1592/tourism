@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Atul-Ranjan12/tourism/internal/config"
@@ -695,4 +696,172 @@ func (m *Repository) PostAdminAddBus(w http.ResponseWriter, r *http.Request) {
 	// 4. Redirect the User
 	log.Println("Succesful completion of the form submission")
 	http.Redirect(w, r, fmt.Sprintf("/merchant/%d/merchant-add-items", currentUser.ID), http.StatusSeeOther)
+}
+
+// This function shows the Records of an individual bus
+func (m *Repository) AdminShowBus(w http.ResponseWriter, r *http.Request) {
+	// Set up stringmap
+	stringMap := make(map[string]string)
+
+	// Add User Details to the session
+	currentUser := m.App.Session.Get(r.Context(), "user_details").(models.User)
+	data := make(map[string]interface{})
+	data["user_details"] = currentUser
+
+	// Add the Bus details in the session
+	explodedURL := strings.Split(r.RequestURI, "/")
+	busID, _ := strconv.Atoi(explodedURL[4])
+	bus, err := m.DB.GetBusByID(busID)
+	if err != nil {
+		log.Println("Error retrieving bus:", err)
+		return
+	}
+	data["bus_reg"] = bus
+
+	render.Template(w, r, "show-bus.page.tmpl", &models.TemplateData{
+		StringMap: stringMap,
+		Data:      data,
+		Form:      forms.New(nil),
+	})
+}
+
+// This Function Updates the Details of the Merchant Bus
+func (m *Repository) PostAdminUpdateBus(w http.ResponseWriter, r *http.Request) {
+	// Get current user
+	currentUser := m.App.Session.Get(r.Context(), "user_details").(models.User)
+
+	// Set up stringmap
+	stringMap := make(map[string]string)
+
+	// Parse the form
+	err := r.ParseForm()
+	if err != nil {
+		log.Println("Error Parsing the form")
+		return
+	}
+
+	// Get the Bus ID
+	explodedURL := strings.Split(r.RequestURI, "/")
+	log.Println(explodedURL)
+	busID, _ := strconv.Atoi(explodedURL[4])
+	merchantID, _ := strconv.Atoi(explodedURL[2])
+
+	// Get previous bus
+	prevBus, err := m.DB.GetBusByID(busID)
+	if err != nil {
+		log.Println("Couldnt get bus by id : ", err)
+		return
+	}
+	// Post The Form
+	form := forms.New(r.PostForm)
+	numSeats := form.ConvertToInt("bus_seats")
+
+	// Form Validation
+
+	// Get the bus
+	bus := models.AddBusData{
+		BusID:       busID,
+		MerchantID:  merchantID,
+		BusName:     r.Form.Get("bus_name"),
+		BusModel:    r.Form.Get("bus_model"),
+		BusAddress:  r.Form.Get("office_address"),
+		BusStart:    r.Form.Get("bus_start"),
+		BusEnd:      r.Form.Get("bus_end"),
+		BusNumSeats: numSeats,
+		BusNumPlate: r.Form.Get("bus_no_plate"),
+		BusPAN:      r.Form.Get("bus_pan"),
+		CreatedAt:   prevBus.CreatedAt,
+		UpdatedAt:   time.Now(),
+	}
+
+	form.Required("bus_name", "bus_model", "office_address", "bus_start", "bus_end", "bus_seats", "bus_no_plate", "bus_pan")
+	data := make(map[string]interface{})
+
+	// Add User details to the template
+	data["user_details"] = currentUser
+
+	if !form.Valid() {
+		log.Println(form.Errors)
+		data["bus_reg"] = bus
+		render.Template(w, r, "show-bus.page.tmpl", &models.TemplateData{
+			StringMap: stringMap,
+			Data:      data,
+			Form:      form,
+		})
+		return
+	}
+
+	// Update the bus information
+	err = m.DB.UpdateBusInfo(busID, bus)
+	if err != nil {
+		log.Println("Error updating bus information: ", err)
+		return
+	}
+
+	// Redirect user
+	log.Println("Reached Here")
+	m.App.Session.Put(r.Context(), "flash", "Changes saved Succesfully!")
+	http.Redirect(w, r, fmt.Sprintf("/merchant/%d/merchant-add-items", currentUser.ID), http.StatusSeeOther)
+}
+
+// Function to delete the bus
+func (m *Repository) PostAdminDeleteBus(w http.ResponseWriter, r *http.Request) {
+	// Get current user
+	currentUser := m.App.Session.Get(r.Context(), "user_details").(models.User)
+
+	// Get the bus ID to be deleted
+	explodedURL := strings.Split(r.RequestURI, "/")
+	busID, _ := strconv.Atoi(explodedURL[5])
+
+	// delete the bus
+	err := m.DB.DeleteBusByID(busID)
+	if err != nil {
+		log.Println("Error in deletion: ", err)
+		return
+	}
+
+	m.App.Session.Put(r.Context(), "flash", "Deleted Succesfully")
+	// Redirect User
+	http.Redirect(w, r, fmt.Sprintf("/merchant/%d/merchant-add-items", currentUser.ID), http.StatusSeeOther)
+}
+
+// Function to make the reservation
+func (m *Repository) MakeBusReservation(w http.ResponseWriter, r *http.Request) {
+	render.Template(w, r, "make-bus-reservation.page.tmpl", &models.TemplateData{})
+}
+
+func (m *Repository) PostMakeBusReservation(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		log.Println("Error parsing the form")
+		return
+	}
+
+	// Parsing the dates
+	resDate, _ := time.Parse("2006-01-02", r.Form.Get("res_date"))
+	busID, _ := strconv.Atoi(r.Form.Get("bus_id"))
+	numPeople, _ := strconv.Atoi(r.Form.Get("num_people"))
+
+	// Making the data to add to the databse
+	busRes := models.BusReservationData{
+		BusID:           busID,
+		ReservationDate: resDate,
+		NumPassengers:   numPeople,
+		From:            r.Form.Get("from"),
+		Stop:            r.Form.Get("to"),
+		PhoneNumber:     r.Form.Get("phone"),
+		Email:           r.Form.Get("email"),
+		CreatedAt:       time.Now(),
+		UpdatedAt:       time.Now(),
+	}
+
+	// Submitting to the database
+	err = m.DB.MakeBusReservation(busRes)
+	if err != nil {
+		log.Println("Error adding the reservation to the database: ", err)
+		return
+	}
+
+	// Redirect to the same page for now
+	http.Redirect(w, r, "/make-bus-reservation", http.StatusSeeOther)
 }

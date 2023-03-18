@@ -61,7 +61,7 @@
 {{range $bus}}
 <div class="container">
   <div class="title mt-4">
-    <div class="float-sm-left text-secondary"><a href="#!">{{.BusName}}</a></div>
+    <div class="float-sm-left text-secondary"><a href="/merchant/{{ $user.ID }}/add-bus/{{.BusID}}">{{.BusName}}</a></div>
     <div class="float-sm-right text-secondary">{{.BusStart}} to {{.BusEnd}}</div>
   </div>
   <br />

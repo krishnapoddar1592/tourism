@@ -328,7 +328,7 @@ func (m *PostgresDBRepo) GetAllBus(merchantID int) ([]models.AddBusData, error) 
 	defer cancel()
 
 	query := `
-		SELECT bus_name, bus_source, bus_destination, bus_model, bus_no_plate, num_seats, office_pan, office_address, 
+		SELECT id, bus_name, bus_source, bus_destination, bus_model, bus_no_plate, num_seats, office_pan, office_address, 
 			   merchant_id, created_at, updated_at
 		FROM bus
 		WHERE merchant_id = $1
@@ -344,6 +344,7 @@ func (m *PostgresDBRepo) GetAllBus(merchantID int) ([]models.AddBusData, error) 
 	for rows.Next() {
 		var i models.AddBusData
 		err := rows.Scan(
+			&i.BusID,
 			&i.BusName,
 			&i.BusStart,
 			&i.BusEnd,
@@ -367,4 +368,113 @@ func (m *PostgresDBRepo) GetAllBus(merchantID int) ([]models.AddBusData, error) 
 		return busses, err
 	}
 	return busses, nil
+}
+
+// Fucntion to get bus details by ID
+func (m *PostgresDBRepo) GetBusByID(busID int) (models.AddBusData, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `
+		SELECT id, bus_name, bus_source, bus_destination, bus_model, bus_no_plate, num_seats, office_pan, office_address, 
+			   merchant_id, created_at, updated_at
+		FROM bus
+		WHERE id = $1
+	`
+	var i models.AddBusData
+
+	row := m.DB.QueryRowContext(ctx, query, busID)
+	err := row.Scan(
+		&i.BusID,
+		&i.BusName,
+		&i.BusStart,
+		&i.BusEnd,
+		&i.BusModel,
+		&i.BusNumPlate,
+		&i.BusNumSeats,
+		&i.BusPAN,
+		&i.BusAddress,
+		&i.MerchantID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	if err != nil {
+		return i, err
+	}
+	return i, nil
+}
+
+// Update the Bus Details in the page
+func (m *PostgresDBRepo) UpdateBusInfo(busID int, i models.AddBusData) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `
+		UPDATE bus
+		SET bus_name = $1, bus_source = $2, bus_destination = $3, bus_model = $4,
+			bus_no_plate = $5, num_seats = $6, office_pan = $7, office_address = $8,
+			merchant_id = $9, created_at = $10, updated_at = $11
+		WHERE id = $12
+	`
+
+	_, err := m.DB.QueryContext(ctx, query,
+		i.BusName,
+		i.BusStart,
+		i.BusEnd,
+		i.BusModel,
+		i.BusNumPlate,
+		i.BusNumSeats,
+		i.BusPAN,
+		i.BusAddress,
+		i.MerchantID,
+		i.CreatedAt,
+		i.UpdatedAt,
+		busID,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Function to delete bus by id
+func (m *PostgresDBRepo) DeleteBusByID(busID int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `DELETE FROM bus WHERE id=$1`
+
+	_, err := m.DB.ExecContext(ctx, query, busID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Function to make a new Bus Reservation
+func (m *PostgresDBRepo) MakeBusReservation(busRes models.BusReservationData) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `
+		INSERT INTO bus_reservations (bus_id, reservation_date, num_passangers, 
+			start, stop, phone_number, email, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+	`
+
+	_, err := m.DB.QueryContext(ctx, query,
+		busRes.BusID,
+		busRes.ReservationDate,
+		busRes.NumPassengers,
+		busRes.From,
+		busRes.Stop,
+		busRes.PhoneNumber,
+		busRes.Email,
+		busRes.CreatedAt,
+		busRes.UpdatedAt,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
 }
