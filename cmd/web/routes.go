@@ -69,6 +69,9 @@ func routes(app *config.AppConfig) http.Handler {
 
 		// Delete the bus
 		mux.Get("/{src}/add-bus/delete/{id}", handlers.Repo.PostAdminDeleteBus)
+
+		// Show the bus Reservation
+		mux.Get("/{src}/merchant-show-reservations", handlers.Repo.ShowAllReservations)
 	})
 
 	return mux

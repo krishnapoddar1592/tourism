@@ -236,6 +236,7 @@ func (m *Repository) PostSignUp(w http.ResponseWriter, r *http.Request) {
 
 // Function to show the administrative things
 func (m *Repository) ShowAdminDashboard(w http.ResponseWriter, r *http.Request) {
+	// Getting the current User from the session: for the main merchant layout
 	currentUser := m.App.Session.Get(r.Context(), "user_details").(models.User)
 	stringMap := make(map[string]string)
 	stringMap["user_name"] = currentUser.FirstName + " " + currentUser.LastName
@@ -830,6 +831,8 @@ func (m *Repository) MakeBusReservation(w http.ResponseWriter, r *http.Request) 
 	render.Template(w, r, "make-bus-reservation.page.tmpl", &models.TemplateData{})
 }
 
+// TODO: Make this funciton right :: Make this page right
+// Function to Post the Bus Reservation to the database
 func (m *Repository) PostMakeBusReservation(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
@@ -864,4 +867,22 @@ func (m *Repository) PostMakeBusReservation(w http.ResponseWriter, r *http.Reque
 
 	// Redirect to the same page for now
 	http.Redirect(w, r, "/make-bus-reservation", http.StatusSeeOther)
+}
+
+// Function to show all Bus Reservations
+func (m *Repository) ShowAllReservations(w http.ResponseWriter, r *http.Request) {
+	// Getting the current User from the session: for the main merchant layout
+	currentUser := m.App.Session.Get(r.Context(), "user_details").(models.User)
+	stringMap := make(map[string]string)
+	stringMap["user_name"] = currentUser.FirstName + " " + currentUser.LastName
+
+	// Passing the Current User Details to the template data:
+	data := make(map[string]interface{})
+	data["user_details"] = currentUser
+
+	// Rendering the template
+	render.Template(w, r, "merchant-show-reservations.page.tmpl", &models.TemplateData{
+		StringMap: stringMap,
+		Data:      data,
+	})
 }

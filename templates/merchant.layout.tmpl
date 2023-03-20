@@ -79,9 +79,15 @@
             </a>
           </li>
           <li>
-            <a href="#">
+            <a href="/merchant/{{ $user.ID }}/merchant-show-reservations">
               <i class="uil uil-chart"></i>
               <span class="link-name">Reservations</span>
+            </a>
+          </li>
+          <li>
+            <a href="/merchant/{{ $user.ID }}/merchant-show-reservations">
+              <i class="uil uil-check"></i>
+              <span class="link-name">Processed Reservations</span>
             </a>
           </li>
           <li>
@@ -192,9 +198,11 @@
         </div>
       </div>
 
-      {{block "content" .}}
+      <div class="row">
+        {{block "content" .}}
 
-      {{ end }}
+        {{ end }}
+      </div>
     </section>
 
     {{ end }}
