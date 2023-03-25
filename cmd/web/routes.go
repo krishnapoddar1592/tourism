@@ -70,8 +70,24 @@ func routes(app *config.AppConfig) http.Handler {
 		// Delete the bus
 		mux.Get("/{src}/add-bus/delete/{id}", handlers.Repo.PostAdminDeleteBus)
 
-		// Show the bus Reservation
+		// Show the bus Reservation :: UnProcessed
 		mux.Get("/{src}/merchant-show-reservations", handlers.Repo.ShowAllReservations)
+
+		// Show One Single Bus Reservation
+		mux.Get("/{src}/merchant-show-reservations/{id}", handlers.Repo.ShowOneReservation)
+		mux.Post("/{src}/merchant-show-reservations/{id}", handlers.Repo.PostShowOneReservation)
+
+		// Link to Process the Bus Reservation
+		mux.Get("/{src}/merchant-show-reservations/{id}/process", handlers.Repo.ProcessBusReservation)
+
+		// Show Bus Reservaitons UnProcessed
+		mux.Get("/{src}/merchant-show-reservations-processed", handlers.Repo.ShowReservationsProcessed)
+
+		// Function to delete the bus reservations
+		mux.Get("/{src}/delete-reservation/{id}", handlers.Repo.DeleteBusReservation)
+
+		// Function to get the reservation calender
+		mux.Get("/{src}/reservation-calender", handlers.Repo.ShowReservationCalender)
 	})
 
 	return mux

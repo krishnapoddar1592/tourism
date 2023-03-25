@@ -209,7 +209,7 @@ func (m *Repository) PostSignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//TODO: Send the verification code through email
+	// Send the verification code through email
 	mailMessage := fmt.Sprintf(`
 		<h2><strong>Email Verification </strong></h2> <br>
 		Dear %s, <br>
@@ -848,6 +848,8 @@ func (m *Repository) PostMakeBusReservation(w http.ResponseWriter, r *http.Reque
 	// Making the data to add to the databse
 	busRes := models.BusReservationData{
 		BusID:           busID,
+		FirstName:       r.Form.Get("first_name"),
+		LastName:        r.Form.Get("last_name"),
 		ReservationDate: resDate,
 		NumPassengers:   numPeople,
 		From:            r.Form.Get("from"),
@@ -880,9 +882,198 @@ func (m *Repository) ShowAllReservations(w http.ResponseWriter, r *http.Request)
 	data := make(map[string]interface{})
 	data["user_details"] = currentUser
 
-	// Rendering the template
+	// Get all the reservations from the database
+	busRes, err := m.DB.GetAllBusReservations(true)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	// Add the reservations into the data variable
+	data["reservations"] = busRes
+	stringMap["is_processed"] = "no"
+
 	render.Template(w, r, "merchant-show-reservations.page.tmpl", &models.TemplateData{
 		StringMap: stringMap,
 		Data:      data,
 	})
+}
+
+// Function to handle when user clicks on a reservation in the table
+func (m *Repository) ShowOneReservation(w http.ResponseWriter, r *http.Request) {
+	// Getting the current User from the session: for the main merchant layout
+	currentUser := m.App.Session.Get(r.Context(), "user_details").(models.User)
+	stringMap := make(map[string]string)
+	stringMap["user_name"] = currentUser.FirstName + " " + currentUser.LastName
+
+	// Passing the Current User Details to the template data:
+	data := make(map[string]interface{})
+	data["user_details"] = currentUser
+
+	// Get the Reservation ID
+	explodedURL := strings.Split(r.RequestURI, "/")
+	id, _ := strconv.Atoi(explodedURL[4])
+
+	// Get Reservation information from ID
+	res, err := m.DB.GetReservationByID(id)
+	if err != nil {
+		log.Println("Error fetching the reservation from the database")
+		return
+	}
+	data["one_res"] = res
+
+	// Send the reservation in the new template and render it
+	render.Template(w, r, "merchant-show-busReservation.page.tmpl", &models.TemplateData{
+		StringMap: stringMap,
+		Data:      data,
+		Form:      forms.New(nil),
+	})
+}
+
+// Function to handle when the bus reservation has been processed:
+func (m *Repository) ProcessBusReservation(w http.ResponseWriter, r *http.Request) {
+	// Get the reservation ID
+	currentUser := m.App.Session.Get(r.Context(), "user_details").(models.User)
+
+	explodedURL := strings.Split(r.RequestURI, "/")
+	id, _ := strconv.Atoi(explodedURL[4])
+
+	err := m.DB.ProcessReservation("bus_reservations", id)
+	if err != nil {
+		log.Println("There was an error processing the reservation ")
+		return
+	}
+
+	// TODO: Send a email regarding the processing of the booking
+
+	http.Redirect(w, r, fmt.Sprintf("/merchant/%d/merchant-show-reservations", currentUser.ID), http.StatusSeeOther)
+}
+
+// Function to handle when the bus reservation has been deleted:
+func (m *Repository) DeleteBusReservation(w http.ResponseWriter, r *http.Request) {
+	currentUser := m.App.Session.Get(r.Context(), "user_details").(models.User)
+
+	explodedURL := strings.Split(r.RequestURI, "/")
+	id, _ := strconv.Atoi(explodedURL[4])
+
+	err := m.DB.DeleteBusReservation(id)
+	if err != nil {
+		log.Println("Error deleting the reservation: ", err)
+		return
+	}
+
+	// Redirect the user
+	http.Redirect(w, r, fmt.Sprintf("/merchant/%d/merchant-show-reservations", currentUser.ID), http.StatusSeeOther)
+}
+
+// Function to show all the processed reservations
+func (m *Repository) ShowReservationsProcessed(w http.ResponseWriter, r *http.Request) {
+	// Getting the current User from the session: for the main merchant layout
+	currentUser := m.App.Session.Get(r.Context(), "user_details").(models.User)
+	stringMap := make(map[string]string)
+	stringMap["user_name"] = currentUser.FirstName + " " + currentUser.LastName
+
+	// Passing the Current User Details to the template data:
+	data := make(map[string]interface{})
+	data["user_details"] = currentUser
+
+	// Get all the reservations from the database
+	busRes, err := m.DB.GetAllBusReservations(false)
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	// Add the reservations into the data variable
+	data["reservations"] = busRes
+	stringMap["is_processed"] = "yes"
+
+	render.Template(w, r, "merchant-show-reservations.page.tmpl", &models.TemplateData{
+		StringMap: stringMap,
+		Data:      data,
+	})
+}
+
+// Function to handle the posting of an editetd Booking
+func (m *Repository) PostShowOneReservation(w http.ResponseWriter, r *http.Request) {
+	// Get current user
+	currentUser := m.App.Session.Get(r.Context(), "user_details").(models.User)
+
+	busResUpdate := models.BusReservationData{
+		From:        r.Form.Get("from"),
+		Stop:        r.Form.Get("stop"),
+		PhoneNumber: r.Form.Get("phone"),
+		Email:       r.Form.Get("email"),
+	}
+
+	// Get the Reservation ID
+	explodedURL := strings.Split(r.RequestURI, "/")
+	id, _ := strconv.Atoi(explodedURL[4])
+
+	// Update the bus location, email and phone
+	err := m.DB.UpdateBusReservation(busResUpdate, id)
+	if err != nil {
+		log.Println("Error updating the reservation")
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/merchant/%d/merchant-show-reservations", currentUser.ID), http.StatusSeeOther)
+}
+
+// Make a Reservation Calender and display it
+func (m *Repository) ShowReservationCalender(w http.ResponseWriter, r *http.Request) {
+
+	// Get the current user
+	currentUser := m.App.Session.Get(r.Context(), "user_details").(models.User)
+
+	now := time.Now()
+
+	if r.URL.Query().Get("y") != "" {
+		year, _ := strconv.Atoi(r.URL.Query().Get("y"))
+		month, _ := strconv.Atoi(r.URL.Query().Get("m"))
+
+		now = time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC)
+	}
+
+	data := make(map[string]interface{})
+	data["now"] = now
+
+	data["user_details"] = currentUser
+
+	next := now.AddDate(0, 1, 0)
+	last := now.AddDate(0, -1, 0)
+
+	nextMonth := next.Format("01")
+	nextMonthYear := next.Format("2006")
+
+	lastMonth := last.Format("01")
+	lastMonthYear := last.Format("2006")
+
+	stringMap := make(map[string]string)
+
+	stringMap["user_name"] = currentUser.FirstName + " " + currentUser.LastName
+
+	stringMap["next_month"] = nextMonth
+	stringMap["next_month_year"] = nextMonthYear
+	stringMap["last_month"] = lastMonth
+	stringMap["last_month_year"] = lastMonthYear
+
+	stringMap["this_month"] = now.Format("01")
+	stringMap["this_month_year"] = now.Format("2006")
+
+	// get first and last day of the month
+	currentYear, currentMonth, _ := now.Date()
+	currentLocation := now.Location()
+	firstOfMonth := time.Date(currentYear, currentMonth, 1, 0, 0, 0, 0, currentLocation)
+	lastOfMonth := firstOfMonth.AddDate(0, 1, -1)
+
+	intMap := make(map[string]int)
+	intMap["days_in_month"] = lastOfMonth.Day()
+
+	render.Template(w, r, "merchant-reservation-calender-bus.page.tmpl", &models.TemplateData{
+		StringMap: stringMap,
+		Data:      data,
+		IntMap:    intMap,
+	})
+
 }

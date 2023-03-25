@@ -78,7 +78,10 @@ type AddBusData struct {
 
 // Bus Reservation Model
 type BusReservationData struct {
+	ReservationID   int
 	BusID           int
+	FirstName       string
+	LastName        string
 	ReservationDate time.Time
 	NumPassengers   int
 	From            string
@@ -87,4 +90,5 @@ type BusReservationData struct {
 	Email           string
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
+	Bus             AddBusData
 }

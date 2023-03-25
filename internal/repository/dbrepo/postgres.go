@@ -3,6 +3,7 @@ package dbrepo
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -457,22 +458,173 @@ func (m *PostgresDBRepo) MakeBusReservation(busRes models.BusReservationData) er
 	defer cancel()
 
 	query := `
-		INSERT INTO bus_reservations (bus_id, reservation_date, num_passangers, 
-			start, stop, phone_number, email, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		INSERT INTO bus_reservations (bus_id, first_name, last_name, reservation_date, num_passangers, 
+			start, stop, phone_number, email, processed, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 	`
 
 	_, err := m.DB.QueryContext(ctx, query,
 		busRes.BusID,
+		busRes.FirstName,
+		busRes.LastName,
 		busRes.ReservationDate,
 		busRes.NumPassengers,
 		busRes.From,
 		busRes.Stop,
 		busRes.PhoneNumber,
 		busRes.Email,
+		0,
 		busRes.CreatedAt,
 		busRes.UpdatedAt,
 	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Function to get all the bus Reservations from the database
+func (m *PostgresDBRepo) GetAllBusReservations(showNew bool) ([]models.BusReservationData, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var busRes []models.BusReservationData
+	var query string
+	var processed int
+
+	if showNew {
+		processed = 0
+	} else {
+		processed = 1
+	}
+
+	query = fmt.Sprintf(`
+			SELECT  br.id, bus_id, first_name, last_name, reservation_date, num_passangers, 
+					start, stop, phone_number, email, bus_name, bus_no_plate
+			FROM bus_reservations br
+			LEFT JOIN bus b ON (br.bus_id = b.id)
+			WHERE br.processed = %d
+			ORDER BY br.reservation_date ASC
+		`, processed)
+
+	rows, err := m.DB.QueryContext(ctx, query)
+	if err != nil {
+		log.Println("Cannot execute this query select from bus reservations table")
+		return busRes, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var i models.BusReservationData
+		err := rows.Scan(
+			&i.ReservationID,
+			&i.BusID,
+			&i.FirstName,
+			&i.LastName,
+			&i.ReservationDate,
+			&i.NumPassengers,
+			&i.From,
+			&i.Stop,
+			&i.PhoneNumber,
+			&i.Email,
+			&i.Bus.BusName,
+			&i.Bus.BusNumPlate,
+		)
+		if err != nil {
+			log.Println("Error scanning the rows into the variables")
+			return busRes, err
+		}
+
+		busRes = append(busRes, i)
+	}
+
+	if err = rows.Err(); err != nil {
+		return busRes, err
+	}
+	return busRes, nil
+}
+
+// Get One reeservation information from ID
+func (m *PostgresDBRepo) GetReservationByID(id int) (models.BusReservationData, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var i models.BusReservationData
+
+	query := `
+			SELECT  br.id, bus_id, first_name, last_name, reservation_date, num_passangers, 
+					start, stop, phone_number, email, bus_name, bus_no_plate
+			FROM bus_reservations br
+			LEFT JOIN bus b ON (br.bus_id = b.id)
+			WHERE br.id = $1
+			ORDER BY br.reservation_date ASC
+		`
+
+	row := m.DB.QueryRowContext(ctx, query, id)
+	err := row.Scan(
+		&i.ReservationID,
+		&i.BusID,
+		&i.FirstName,
+		&i.LastName,
+		&i.ReservationDate,
+		&i.NumPassengers,
+		&i.From,
+		&i.Stop,
+		&i.PhoneNumber,
+		&i.Email,
+		&i.Bus.BusName,
+		&i.Bus.BusNumPlate,
+	)
+	if err != nil {
+		return i, err
+	}
+
+	return i, nil
+}
+
+// Function to process a reseravtion
+func (m *PostgresDBRepo) ProcessReservation(table string, id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := fmt.Sprintf(`
+		UPDATE %s
+		SET processed = 1
+		WHERE id = $1
+	`, table)
+
+	_, err := m.DB.ExecContext(ctx, query, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Function to update bus reservation
+func (m *PostgresDBRepo) UpdateBusReservation(res models.BusReservationData, id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `
+		UPDATE bus_reservations
+		SET start = $1, stop = $2, phone_number = $3, email = $4
+		WHERE id = $5
+	`
+	_, err := m.DB.ExecContext(ctx, query, res.From, res.Stop, res.PhoneNumber, res.Email, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (m *PostgresDBRepo) DeleteBusReservation(id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `
+		DELETE from bus_reservations WHERE id = $1
+	`
+	_, err := m.DB.ExecContext(ctx, query, id)
 	if err != nil {
 		return err
 	}

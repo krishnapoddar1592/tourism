@@ -49,6 +49,7 @@ func main() {
 func run() (*driver.DB, error) {
 	// Register Premitive Types for the Session (Variables the session needs to store)
 	gob.Register(models.User{})
+	gob.Register(models.BusReservationData{})
 
 	// Set up Channel to send the mail
 	mailChan := make(chan models.ConfirmationMailData)

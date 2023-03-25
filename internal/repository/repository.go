@@ -21,4 +21,9 @@ type DatabaseRepo interface {
 	UpdateBusInfo(busID int, i models.AddBusData) error
 	DeleteBusByID(busID int) error
 	MakeBusReservation(busRes models.BusReservationData) error
+	GetAllBusReservations(showNew bool) ([]models.BusReservationData, error)
+	GetReservationByID(id int) (models.BusReservationData, error)
+	ProcessReservation(table string, id int) error
+	UpdateBusReservation(res models.BusReservationData, id int) error
+	DeleteBusReservation(id int) error
 }
