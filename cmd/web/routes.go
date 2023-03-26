@@ -70,6 +70,17 @@ func routes(app *config.AppConfig) http.Handler {
 		// Delete the bus
 		mux.Get("/{src}/add-bus/delete/{id}", handlers.Repo.PostAdminDeleteBus)
 
+		// Merchant Add Hotel Resrvation Section
+		mux.Get("/{src}/add-hotel", handlers.Repo.AdminAddHotel)
+		mux.Post("/{src}/add-hotel", handlers.Repo.PostAdminAddHotel)
+
+		// Mercant Show and Edit the Bus Section
+		mux.Get("/{src}/add-hotel/{id}", handlers.Repo.AdminShowOneHotel)
+		mux.Post("/{src}/add-hotel/{id}", handlers.Repo.PostAdminShowOneHotel)
+
+		// Delete the reservation
+		mux.Get("/{src}/add-hotel/delete/{id}", handlers.Repo.DeleteBus)
+
 		// Show the bus Reservation :: UnProcessed
 		mux.Get("/{src}/merchant-show-reservations", handlers.Repo.ShowAllReservations)
 
@@ -88,6 +99,7 @@ func routes(app *config.AppConfig) http.Handler {
 
 		// Function to get the reservation calender
 		mux.Get("/{src}/reservation-calender", handlers.Repo.ShowReservationCalender)
+
 	})
 
 	return mux

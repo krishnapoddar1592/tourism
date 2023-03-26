@@ -92,3 +92,20 @@ type BusReservationData struct {
 	UpdatedAt       time.Time
 	Bus             AddBusData
 }
+
+// Model for the Hotel/ Hotel Room
+type HotelRoom struct {
+	HotelID              int
+	MerchantID           int
+	HotelName            string
+	HotelRoomName        string
+	HotelType            string
+	HotelAddress         string
+	HotelPAN             string
+	HotelNumRooms        int
+	HotelPhone1          string
+	HotelPhone2          string
+	HotelRoomDescription string
+	CreatedAt            time.Time
+	UpdatedAt            time.Time
+}

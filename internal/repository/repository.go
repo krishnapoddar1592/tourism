@@ -26,4 +26,9 @@ type DatabaseRepo interface {
 	ProcessReservation(table string, id int) error
 	UpdateBusReservation(res models.BusReservationData, id int) error
 	DeleteBusReservation(id int) error
+	AddNewHotelRoom(hotel models.HotelRoom) error
+	GetAllHotelRooms(merchantID int) ([]models.HotelRoom, error)
+	GetRoomByID(id int) (models.HotelRoom, error)
+	DeleteRoomByID(id int) error
+	UpdateRoom(hotel models.HotelRoom, id int) error
 }

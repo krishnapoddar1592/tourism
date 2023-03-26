@@ -29,7 +29,7 @@
         >
       </div>
       <div class="col-sm-6">
-        <a href="#1" class="btn btn-block btn-lg btn-outline-danger"
+        <a href="/merchant/{{ $user.ID }}/add-hotel" class="btn btn-block btn-lg btn-outline-danger"
           >Hotel Room Reservations</a
         >
       </div>
@@ -57,7 +57,12 @@
   <h5>Bus:</h5>
 </div>
 {{$bus := index .Data "bus"}}
+{{$hasBus := index .Data "has_bus"}}
 
+{{$room := index .Data "hotel_room"}}
+{{$hasRoom := index .Data "has_hotel_room"}}
+
+{{if gt $hasBus 0}}
 {{range $bus}}
 <div class="container">
   <div class="title mt-4">
@@ -67,6 +72,35 @@
   <br />
   <hr />
 </div>
+{{end}}
+{{else}}
+<div class="container">
+  <div class="title mt-4">
+    <div class="float-sm-right text-secondary">None</div>
+  </div>
+</div>
+{{end}}
+
+<div class="title mt-3">
+  <h5>Hotel Rooms:</h5>
+</div>
+{{if gt $hasRoom 0}}
+{{range $room}}
+<div class="container">
+  <div class="title mt-4">
+    <div class="float-sm-left text-secondary"><a href="/merchant/{{ $user.ID }}/add-hotel/{{.HotelID}}">{{.HotelRoomName}}</a></div>
+    <div class="float-sm-right text-secondary">{{.HotelName}}: {{.HotelPhone1}}</div>
+  </div>
+  <br />
+  <hr />
+</div>
+{{else}}
+<div class="container">
+  <div class="title mt-4">
+    <div class="float-sm-right text-secondary">None</div>
+  </div>
+</div>
+{{end}}
 {{end}}
 
 {{ end }}

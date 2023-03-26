@@ -630,3 +630,163 @@ func (m *PostgresDBRepo) DeleteBusReservation(id int) error {
 	}
 	return nil
 }
+
+// Function to add a new Hotel to the database
+func (m *PostgresDBRepo) AddNewHotelRoom(hotel models.HotelRoom) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `
+	INSERT INTO hotel_room (hotel_name, hotel_room_name, hotel_type, hotel_address, hotel_pan, hotel_num_room, hotel_phone_1, hotel_phone_2, merchant_id, hotel_description, created_at, updated_at)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+	`
+
+	_, err := m.DB.ExecContext(ctx, query,
+		hotel.HotelName,
+		hotel.HotelRoomName,
+		hotel.HotelType,
+		hotel.HotelAddress,
+		hotel.HotelPAN,
+		hotel.HotelNumRooms,
+		hotel.HotelPhone1,
+		hotel.HotelPhone2,
+		hotel.MerchantID,
+		hotel.HotelRoomDescription,
+		hotel.CreatedAt,
+		hotel.UpdatedAt,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Funciton to get all the hotel reservations:
+func (m *PostgresDBRepo) GetAllHotelRooms(merchantID int) ([]models.HotelRoom, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `
+	SELECT id, hotel_name, hotel_room_name, hotel_type, hotel_address, hotel_pan, hotel_num_room, hotel_phone_1, hotel_phone_2, merchant_id, hotel_description, created_at, updated_at
+	FROM hotel_room 
+	WHERE merchant_id = $1
+	`
+	var rooms []models.HotelRoom
+
+	rows, err := m.DB.QueryContext(ctx, query, merchantID)
+	if err != nil {
+		log.Println("Could not execute this query", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var i models.HotelRoom
+		err := rows.Scan(
+			&i.HotelID,
+			&i.HotelName,
+			&i.HotelRoomName,
+			&i.HotelType,
+			&i.HotelAddress,
+			&i.HotelPAN,
+			&i.HotelNumRooms,
+			&i.HotelPhone1,
+			&i.HotelPhone2,
+			&i.MerchantID,
+			&i.HotelRoomDescription,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		)
+
+		if err != nil {
+			log.Println("Error scanning the rows into variables")
+			return rooms, err
+		}
+
+		rooms = append(rooms, i)
+	}
+	if err = rows.Err(); err != nil {
+		return rooms, err
+	}
+	return rooms, err
+}
+
+// Function to get a room by ID
+func (m *PostgresDBRepo) GetRoomByID(id int) (models.HotelRoom, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `
+	SELECT id, hotel_name, hotel_room_name, hotel_type, hotel_address, hotel_pan, hotel_num_room, hotel_phone_1, hotel_phone_2, merchant_id, hotel_description, created_at, updated_at
+	FROM hotel_room 
+	WHERE id = $1 
+	`
+	var i models.HotelRoom
+
+	row := m.DB.QueryRowContext(ctx, query, id)
+	err := row.Scan(
+		&i.HotelID,
+		&i.HotelName,
+		&i.HotelRoomName,
+		&i.HotelType,
+		&i.HotelAddress,
+		&i.HotelPAN,
+		&i.HotelNumRooms,
+		&i.HotelPhone1,
+		&i.HotelPhone2,
+		&i.MerchantID,
+		&i.HotelRoomDescription,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	if err != nil {
+		return i, err
+	}
+	return i, err
+}
+
+// Function to Delete a Bus
+func (m *PostgresDBRepo) DeleteRoomByID(id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `
+	DELETE from hotel_room WHERE id = $1
+	`
+	_, err := m.DB.ExecContext(ctx, query, id)
+	if err != nil {
+		return err
+	}
+	return err
+}
+
+// Function to Update a Bus
+func (m *PostgresDBRepo) UpdateRoom(hotel models.HotelRoom, id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `
+	UPDATE hotel_room
+	SET hotel_name = $1, hotel_room_name = $2, hotel_type = $3, hotel_address = $4, hotel_pan = $5, hotel_num_room = $6, hotel_phone_1 = $7, 
+		hotel_phone_2 = $8, merchant_id = $9, hotel_description = $10, created_at = $11, updated_at = $12 
+	WHERE id = $13
+	`
+	_, err := m.DB.ExecContext(ctx, query,
+		hotel.HotelName,
+		hotel.HotelRoomName,
+		hotel.HotelType,
+		hotel.HotelAddress,
+		hotel.HotelPAN,
+		hotel.HotelNumRooms,
+		hotel.HotelPhone1,
+		hotel.HotelPhone2,
+		hotel.MerchantID,
+		hotel.HotelRoomDescription,
+		hotel.CreatedAt,
+		hotel.UpdatedAt,
+		id,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
