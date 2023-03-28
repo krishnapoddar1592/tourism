@@ -132,6 +132,21 @@
       </div>
     </div>
 
+    <div class="form-group mt-3">
+      <strong><label for="price">Price of the Hotel Room</label></strong>
+      {{with .Form.Errors.Get "price"}}
+          <label class="text-danger">{{.}}</label>
+          {{ end }}
+      <input
+        type="text"
+        class="form-control form-control-lg {{with .Form.Errors.Get "price"}} is-invalid {{ end }}"
+        id="price"
+        name="price"
+        placeholder="Price of the Hotel Room"
+        value="{{$hotel.Price}}"
+      />
+    </div>
+
     
     <div class="form-group mt-3">
       <strong><label for="hotel_desc">Short Description of the Hotel Room</label></strong>

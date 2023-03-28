@@ -8,5 +8,6 @@ create_table("bus") {
   t.Column("num_seats", "integer", {})
   t.Column("office_pan", "integer", {})
   t.Column("office_address", "string", {})
+  t.Column("price", "integer", {})
   t.Column("merchant_id", "integer", {})
 }

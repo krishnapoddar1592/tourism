@@ -53,6 +53,20 @@
         value="{{$bus.BusAddress}}"
       />
     </div>
+     <div class="form-group mt-3">
+      <strong><label for="price">Price of Ticket</label></strong>
+      {{with .Form.Errors.Get "price"}}
+          <label class="text-danger">{{.}}</label>
+          {{ end }}
+      <input
+        type="text"
+        class="form-control form-control-lg {{with .Form.Errors.Get "price"}} is-invalid {{ end }}"
+        id="price"
+        name="price"
+        placeholder="Price of Ticket"
+        value="{{$bus.Price}}"
+      />
+    </div>
     <div class="form-row mt-3">
       <div class="form-group col-md-6">
         <strong><label for="bus_start">Bus Starts At:</label></strong>

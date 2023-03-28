@@ -299,9 +299,9 @@ func (m *PostgresDBRepo) AddBusToDatabase(bus models.AddBusData) error {
 	defer cancel()
 
 	query := `
-		INSERT INTO bus (bus_name, bus_source, bus_destination, bus_model, bus_no_plate, num_seats, office_pan, office_address, 
+		INSERT INTO bus (bus_name, bus_source, bus_destination, bus_model, bus_no_plate, num_seats, office_pan, office_address, price,
 						merchant_id, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 	`
 	_, err := m.DB.QueryContext(ctx, query,
 		bus.BusName,
@@ -312,6 +312,7 @@ func (m *PostgresDBRepo) AddBusToDatabase(bus models.AddBusData) error {
 		bus.BusNumSeats,
 		bus.BusPAN,
 		bus.BusAddress,
+		bus.Price,
 		bus.MerchantID,
 		bus.CreatedAt,
 		bus.UpdatedAt,
@@ -378,7 +379,7 @@ func (m *PostgresDBRepo) GetBusByID(busID int) (models.AddBusData, error) {
 
 	query := `
 		SELECT id, bus_name, bus_source, bus_destination, bus_model, bus_no_plate, num_seats, office_pan, office_address, 
-			   merchant_id, created_at, updated_at
+			   merchant_id, created_at, updated_at, price
 		FROM bus
 		WHERE id = $1
 	`
@@ -398,6 +399,7 @@ func (m *PostgresDBRepo) GetBusByID(busID int) (models.AddBusData, error) {
 		&i.MerchantID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Price,
 	)
 	if err != nil {
 		return i, err
@@ -414,8 +416,8 @@ func (m *PostgresDBRepo) UpdateBusInfo(busID int, i models.AddBusData) error {
 		UPDATE bus
 		SET bus_name = $1, bus_source = $2, bus_destination = $3, bus_model = $4,
 			bus_no_plate = $5, num_seats = $6, office_pan = $7, office_address = $8,
-			merchant_id = $9, created_at = $10, updated_at = $11
-		WHERE id = $12
+			merchant_id = $9, created_at = $10, updated_at = $11, price = $12
+		WHERE id = $13
 	`
 
 	_, err := m.DB.QueryContext(ctx, query,
@@ -430,6 +432,7 @@ func (m *PostgresDBRepo) UpdateBusInfo(busID int, i models.AddBusData) error {
 		i.MerchantID,
 		i.CreatedAt,
 		i.UpdatedAt,
+		i.Price,
 		busID,
 	)
 	if err != nil {
@@ -637,8 +640,8 @@ func (m *PostgresDBRepo) AddNewHotelRoom(hotel models.HotelRoom) error {
 	defer cancel()
 
 	query := `
-	INSERT INTO hotel_room (hotel_name, hotel_room_name, hotel_type, hotel_address, hotel_pan, hotel_num_room, hotel_phone_1, hotel_phone_2, merchant_id, hotel_description, created_at, updated_at)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+	INSERT INTO hotel_room (hotel_name, hotel_room_name, hotel_type, hotel_address, hotel_pan, hotel_num_room, hotel_phone_1, hotel_phone_2, merchant_id, hotel_description, price, created_at, updated_at)
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
 	`
 
 	_, err := m.DB.ExecContext(ctx, query,
@@ -652,6 +655,7 @@ func (m *PostgresDBRepo) AddNewHotelRoom(hotel models.HotelRoom) error {
 		hotel.HotelPhone2,
 		hotel.MerchantID,
 		hotel.HotelRoomDescription,
+		hotel.Price,
 		hotel.CreatedAt,
 		hotel.UpdatedAt,
 	)
@@ -716,7 +720,7 @@ func (m *PostgresDBRepo) GetRoomByID(id int) (models.HotelRoom, error) {
 	defer cancel()
 
 	query := `
-	SELECT id, hotel_name, hotel_room_name, hotel_type, hotel_address, hotel_pan, hotel_num_room, hotel_phone_1, hotel_phone_2, merchant_id, hotel_description, created_at, updated_at
+	SELECT id, hotel_name, hotel_room_name, hotel_type, hotel_address, hotel_pan, hotel_num_room, hotel_phone_1, hotel_phone_2, merchant_id, hotel_description, created_at, updated_at, price
 	FROM hotel_room 
 	WHERE id = $1 
 	`
@@ -737,6 +741,7 @@ func (m *PostgresDBRepo) GetRoomByID(id int) (models.HotelRoom, error) {
 		&i.HotelRoomDescription,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Price,
 	)
 	if err != nil {
 		return i, err
@@ -767,8 +772,8 @@ func (m *PostgresDBRepo) UpdateRoom(hotel models.HotelRoom, id int) error {
 	query := `
 	UPDATE hotel_room
 	SET hotel_name = $1, hotel_room_name = $2, hotel_type = $3, hotel_address = $4, hotel_pan = $5, hotel_num_room = $6, hotel_phone_1 = $7, 
-		hotel_phone_2 = $8, merchant_id = $9, hotel_description = $10, created_at = $11, updated_at = $12 
-	WHERE id = $13
+		hotel_phone_2 = $8, merchant_id = $9, hotel_description = $10, created_at = $11, updated_at = $12, price = $13
+	WHERE id = $14
 	`
 	_, err := m.DB.ExecContext(ctx, query,
 		hotel.HotelName,
@@ -783,6 +788,7 @@ func (m *PostgresDBRepo) UpdateRoom(hotel models.HotelRoom, id int) error {
 		hotel.HotelRoomDescription,
 		hotel.CreatedAt,
 		hotel.UpdatedAt,
+		hotel.Price,
 		id,
 	)
 	if err != nil {

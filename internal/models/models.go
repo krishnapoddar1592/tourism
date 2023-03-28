@@ -72,6 +72,7 @@ type AddBusData struct {
 	BusNumSeats int
 	BusNumPlate string
 	BusPAN      string
+	Price       int
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
@@ -106,6 +107,7 @@ type HotelRoom struct {
 	HotelPhone1          string
 	HotelPhone2          string
 	HotelRoomDescription string
+	Price                int
 	CreatedAt            time.Time
 	UpdatedAt            time.Time
 }

@@ -8,6 +8,7 @@ create_table("hotel_room") {
   t.Column("hotel_num_room", "integer", {})
   t.Column("hotel_phone_1", "string", {})
   t.Column("hotel_phone_2", "string", {})
+  t.Column("price", "integer", {})
   t.Column("merchant_id", "integer", {})
   t.Column("hotel_description", "string", {})
 }

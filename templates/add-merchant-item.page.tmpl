@@ -29,7 +29,9 @@
         >
       </div>
       <div class="col-sm-6">
-        <a href="/merchant/{{ $user.ID }}/add-hotel" class="btn btn-block btn-lg btn-outline-danger"
+        <a
+          href="/merchant/{{ $user.ID }}/add-hotel"
+          class="btn btn-block btn-lg btn-outline-danger"
           >Hotel Room Reservations</a
         >
       </div>
@@ -66,20 +68,23 @@
 {{range $bus}}
 <div class="container">
   <div class="title mt-4">
-    <div class="float-sm-left text-secondary"><a href="/merchant/{{ $user.ID }}/add-bus/{{.BusID}}">{{.BusName}}</a></div>
-    <div class="float-sm-right text-secondary">{{.BusStart}} to {{.BusEnd}}</div>
+    <div class="float-sm-left text-secondary">
+      <a href="/merchant/{{ $user.ID }}/add-bus/{{.BusID}}">{{.BusName}}</a>
+    </div>
+    <div class="float-sm-right text-secondary">
+      {{.BusStart}} to {{.BusEnd}}
+    </div>
   </div>
   <br />
   <hr />
 </div>
-{{end}}
+{{ end }}
 {{else}}
-<div class="container">
-  <div class="title mt-4">
-    <div class="float-sm-right text-secondary">None</div>
-  </div>
+<div class="title mt-4">
+  <p class="text-secondary">None</p>
+  <hr />
 </div>
-{{end}}
+{{ end }}
 
 <div class="title mt-3">
   <h5>Hotel Rooms:</h5>
@@ -88,19 +93,25 @@
 {{range $room}}
 <div class="container">
   <div class="title mt-4">
-    <div class="float-sm-left text-secondary"><a href="/merchant/{{ $user.ID }}/add-hotel/{{.HotelID}}">{{.HotelRoomName}}</a></div>
-    <div class="float-sm-right text-secondary">{{.HotelName}}: {{.HotelPhone1}}</div>
+    <div class="float-sm-left text-secondary">
+      <a
+        href="/merchant/{{ $user.ID }}/add-hotel/{{.HotelID}}"
+        >{{.HotelRoomName}}</a
+      >
+    </div>
+    <div class="float-sm-right text-secondary">
+      {{.HotelName}}: {{.HotelPhone1}}
+    </div>
   </div>
   <br />
   <hr />
 </div>
+{{ end }}
 {{else}}
-<div class="container">
-  <div class="title mt-4">
-    <div class="float-sm-right text-secondary">None</div>
-  </div>
+<div class="title mt-4">
+  <p class="text-secondary">None</p>
+  <hr />
 </div>
-{{end}}
-{{end}}
+{{ end }}
 
 {{ end }}

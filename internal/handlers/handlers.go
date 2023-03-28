@@ -669,6 +669,7 @@ func (m *Repository) PostAdminAddBus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	numSeats := form.ConvertToInt("bus_seats")
+	price := form.ConvertToInt("price")
 
 	busDetails := models.AddBusData{
 		MerchantID:  merchantID,
@@ -680,11 +681,12 @@ func (m *Repository) PostAdminAddBus(w http.ResponseWriter, r *http.Request) {
 		BusNumSeats: numSeats,
 		BusNumPlate: r.Form.Get("bus_no_plate"),
 		BusPAN:      r.Form.Get("bus_pan"),
+		Price:       price,
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
 
-	form.Required("bus_name", "bus_model", "office_address", "bus_start", "bus_end", "bus_seats", "bus_no_plate", "bus_pan")
+	form.Required("bus_name", "bus_model", "office_address", "bus_start", "bus_end", "bus_seats", "bus_no_plate", "bus_pan", "price")
 	form.HasUserAccepted("agreed")
 
 	if !form.Valid() {
@@ -765,7 +767,7 @@ func (m *Repository) PostAdminUpdateBus(w http.ResponseWriter, r *http.Request) 
 	// Post The Form
 	form := forms.New(r.PostForm)
 	numSeats := form.ConvertToInt("bus_seats")
-
+	price := form.ConvertToInt("price")
 	// Form Validation
 
 	// Get the bus
@@ -780,6 +782,7 @@ func (m *Repository) PostAdminUpdateBus(w http.ResponseWriter, r *http.Request) 
 		BusNumSeats: numSeats,
 		BusNumPlate: r.Form.Get("bus_no_plate"),
 		BusPAN:      r.Form.Get("bus_pan"),
+		Price:       price,
 		CreatedAt:   prevBus.CreatedAt,
 		UpdatedAt:   time.Now(),
 	}
@@ -1142,6 +1145,7 @@ func (m *Repository) PostAdminAddHotel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	numRooms := form.ConvertToInt("no_rooms")
+	price := form.ConvertToInt("price")
 
 	// Make the Hotel Reservation Structure
 	hotelRoomDetails := models.HotelRoom{
@@ -1155,12 +1159,13 @@ func (m *Repository) PostAdminAddHotel(w http.ResponseWriter, r *http.Request) {
 		HotelPhone1:          r.Form.Get("hotel_phone_1"),
 		HotelPhone2:          r.Form.Get("hotel_phone_2"),
 		HotelRoomDescription: r.Form.Get("hotel_desc"),
+		Price:                price,
 		CreatedAt:            time.Now(),
 		UpdatedAt:            time.Now(),
 	}
 
 	// User side form validation
-	form.Required("hotel_name", "hotel_room_name", "office_address", "hotel_type", "hotel_pan", "no_rooms", "hotel_phone_1", "hotel_phone_2", "hotel_desc")
+	form.Required("hotel_name", "hotel_room_name", "office_address", "hotel_type", "hotel_pan", "no_rooms", "hotel_phone_1", "hotel_phone_2", "hotel_desc", "price")
 	form.Required("agreed")
 
 	if !form.Valid() {
@@ -1244,6 +1249,7 @@ func (m *Repository) PostAdminShowOneHotel(w http.ResponseWriter, r *http.Reques
 	// Post The Form
 	form := forms.New(r.PostForm)
 	numRooms := form.ConvertToInt("no_rooms")
+	price := form.ConvertToInt("price")
 
 	// Form Validation
 	hotelRoomDetails := models.HotelRoom{
@@ -1257,12 +1263,13 @@ func (m *Repository) PostAdminShowOneHotel(w http.ResponseWriter, r *http.Reques
 		HotelPhone1:          r.Form.Get("hotel_phone_1"),
 		HotelPhone2:          r.Form.Get("hotel_phone_2"),
 		HotelRoomDescription: r.Form.Get("hotel_desc"),
+		Price:                price,
 		CreatedAt:            prevRoom.CreatedAt,
 		UpdatedAt:            time.Now(),
 	}
 
 	// User side form validation
-	form.Required("hotel_name", "hotel_room_name", "office_address", "hotel_type", "hotel_pan", "no_rooms", "hotel_phone_1", "hotel_phone_2", "hotel_desc")
+	form.Required("hotel_name", "hotel_room_name", "office_address", "hotel_type", "hotel_pan", "no_rooms", "hotel_phone_1", "hotel_phone_2", "hotel_desc", "price")
 	form.Required("agreed")
 
 	data := make(map[string]interface{})
@@ -1308,4 +1315,14 @@ func (m *Repository) DeleteBus(w http.ResponseWriter, r *http.Request) {
 	m.App.Session.Put(r.Context(), "flash", "Deleted Succesfully")
 	// Redirect User
 	http.Redirect(w, r, fmt.Sprintf("/merchant/%d/merchant-add-items", currentUser.ID), http.StatusSeeOther)
+}
+
+// Function to display the Make Reservation Page for the Hotel Reservations
+func (m *Repository) ShowMakeHotelReservation(w http.ResponseWriter, r *http.Request) {
+	render.Template(w, r, "make-hotel-reservation.page.tmpl", &models.TemplateData{})
+}
+
+// Function to post the reservation to the database
+func (m *Repository) PostShowMakeHotelReservation(w http.ResponseWriter, r *http.Request) {
+	log.Println("This funciton is called")
 }
