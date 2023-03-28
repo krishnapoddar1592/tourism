@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/Atul-Ranjan12/tourism/internal/config"
@@ -12,6 +13,7 @@ import (
 func routes(app *config.AppConfig) http.Handler {
 	mux := chi.NewRouter()
 	// hey code edited by krishna 
+	log.Println("Helloioafopfiahfkjqhf")
 	// Set up Multiplexer configuration
 	mux.Use(middleware.Recoverer)
 	mux.Use(NoSurf)
