@@ -293,15 +293,182 @@ func (m *PostgresDBRepo) GetMerchantIDFromUserID(userID int) (int, error) {
 	return merchantID, nil
 }
 
-// Add teh bus details to the server
+//Add activity to database
+func (m *PostgresDBRepo) AddActivityToDatabase(activity models.AddActivityData) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `
+		INSERT INTO activity (activity_name, activity_description, activity_price, activity_duration, max_size, min_age, phone_num, email, location,
+						merchant_id, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,$12)
+	`
+	_, err := m.DB.QueryContext(ctx, query,
+		activity.ActivityName,
+		activity.ActivityDescription,
+		activity.ActivityPrice,
+		activity.ActivityDuration,
+		activity.MaxGroupSize,
+		activity.AgeRestriction,
+		activity.PhoneNumber,
+		activity.Email,
+		activity.Location,
+		activity.MerchantID,
+		activity.CreatedAt,
+		activity.UpdatedAt,
+	)
+	if err != nil {
+		log.Println("Error executing query: ", err)
+		return err
+	}
+
+	return nil
+}
+
+
+
+//get All activity from the database
+
+func (m *PostgresDBRepo) GetAllActivity(merchantID int) ([]models.AddActivityData, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `
+		SELECT id, activity_name, activity_description, activity_price, activity_duration, max_size, min_age, phone_num, email, location,
+						merchant_id, created_at, updated_at
+		FROM activity
+		WHERE merchant_id = $1
+	`
+	var activities []models.AddActivityData
+
+	rows, err := m.DB.QueryContext(ctx, query, merchantID)
+	if err != nil {
+		log.Println("Could not execute query: GetAllActivity ", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var i models.AddActivityData
+		err := rows.Scan(
+			&i.ActivityID,
+			&i.ActivityName,
+			&i.ActivityDescription,
+			&i.ActivityPrice,
+			&i.ActivityDuration,
+			&i.MaxGroupSize,
+			&i.AgeRestriction,
+			&i.PhoneNumber,
+			&i.Email,
+			&i.Location,
+			&i.MerchantID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		)
+		if err != nil {
+			log.Println("Error scanning the rows into variables")
+			return activities, err
+		}
+
+		activities = append(activities, i)
+	}
+	if err = rows.Err(); err != nil {
+		return activities, err
+	}
+	return activities, nil
+}
+
+// Fucntion to get Activity details by ID
+func (m *PostgresDBRepo) GetActivityByID(activityID int) (models.AddActivityData, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `
+		SELECT id, activity_name, activity_description, activity_price, activity_duration, max_size, min_age, phone_num, email, location,
+						merchant_id, created_at, updated_at
+		FROM activity
+		WHERE id = $1
+	`
+	var i models.AddActivityData
+
+	row := m.DB.QueryRowContext(ctx, query, activityID)
+	err := row.Scan(
+		&i.ActivityID,
+		&i.ActivityName,
+		&i.ActivityDescription,
+		&i.ActivityPrice,
+		&i.ActivityDuration,
+		&i.MaxGroupSize,
+		&i.AgeRestriction,
+		&i.PhoneNumber,
+		&i.Email,
+		&i.Location,
+		&i.MerchantID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	if err != nil {
+		return i, err
+	}
+	return i, nil
+}
+
+// Update the Activity Details in the page
+func (m *PostgresDBRepo) UpdateActivityInfo(activityID int, i models.AddActivityData) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `
+		UPDATE activity
+		SET activity_name=$1, activity_description=$2, activity_price=$3, activity_duration=$4, max_size=$5, min_age=$6, phone_num=$7, email=$8, location=$9,
+			merchant_id=$10, created_at=$11, updated_at=$12
+		WHERE id = $13
+	`
+
+	_, err := m.DB.QueryContext(ctx, query,
+		i.ActivityName,
+		i.ActivityDescription,
+		i.ActivityPrice,
+		i.ActivityDuration,
+		i.MaxGroupSize,
+		i.AgeRestriction,
+		i.PhoneNumber,
+		i.Email,
+		i.Location,
+		i.MerchantID,
+		i.CreatedAt,
+		i.UpdatedAt,
+		activityID,
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Function to delete activity by id
+func (m *PostgresDBRepo) DeleteActivityByID(activityID int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	query := `DELETE FROM activity WHERE id=$1`
+
+	_, err := m.DB.ExecContext(ctx, query, activityID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+
+// Add the bus details to the server
 func (m *PostgresDBRepo) AddBusToDatabase(bus models.AddBusData) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	query := `
-		INSERT INTO bus (bus_name, bus_source, bus_destination, bus_model, bus_no_plate, num_seats, office_pan, office_address, price,
+		INSERT INTO bus (bus_name, bus_source, bus_destination, bus_model, bus_no_plate, num_seats, office_pan, office_address, 
 						merchant_id, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 	`
 	_, err := m.DB.QueryContext(ctx, query,
 		bus.BusName,
@@ -312,7 +479,6 @@ func (m *PostgresDBRepo) AddBusToDatabase(bus models.AddBusData) error {
 		bus.BusNumSeats,
 		bus.BusPAN,
 		bus.BusAddress,
-		bus.Price,
 		bus.MerchantID,
 		bus.CreatedAt,
 		bus.UpdatedAt,
@@ -379,7 +545,7 @@ func (m *PostgresDBRepo) GetBusByID(busID int) (models.AddBusData, error) {
 
 	query := `
 		SELECT id, bus_name, bus_source, bus_destination, bus_model, bus_no_plate, num_seats, office_pan, office_address, 
-			   merchant_id, created_at, updated_at, price
+			   merchant_id, created_at, updated_at
 		FROM bus
 		WHERE id = $1
 	`
@@ -399,7 +565,6 @@ func (m *PostgresDBRepo) GetBusByID(busID int) (models.AddBusData, error) {
 		&i.MerchantID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.Price,
 	)
 	if err != nil {
 		return i, err
@@ -416,8 +581,8 @@ func (m *PostgresDBRepo) UpdateBusInfo(busID int, i models.AddBusData) error {
 		UPDATE bus
 		SET bus_name = $1, bus_source = $2, bus_destination = $3, bus_model = $4,
 			bus_no_plate = $5, num_seats = $6, office_pan = $7, office_address = $8,
-			merchant_id = $9, created_at = $10, updated_at = $11, price = $12
-		WHERE id = $13
+			merchant_id = $9, created_at = $10, updated_at = $11
+		WHERE id = $12
 	`
 
 	_, err := m.DB.QueryContext(ctx, query,
@@ -432,7 +597,6 @@ func (m *PostgresDBRepo) UpdateBusInfo(busID int, i models.AddBusData) error {
 		i.MerchantID,
 		i.CreatedAt,
 		i.UpdatedAt,
-		i.Price,
 		busID,
 	)
 	if err != nil {
@@ -628,169 +792,6 @@ func (m *PostgresDBRepo) DeleteBusReservation(id int) error {
 		DELETE from bus_reservations WHERE id = $1
 	`
 	_, err := m.DB.ExecContext(ctx, query, id)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// Function to add a new Hotel to the database
-func (m *PostgresDBRepo) AddNewHotelRoom(hotel models.HotelRoom) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-
-	query := `
-	INSERT INTO hotel_room (hotel_name, hotel_room_name, hotel_type, hotel_address, hotel_pan, hotel_num_room, hotel_phone_1, hotel_phone_2, merchant_id, hotel_description, price, created_at, updated_at)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-	`
-
-	_, err := m.DB.ExecContext(ctx, query,
-		hotel.HotelName,
-		hotel.HotelRoomName,
-		hotel.HotelType,
-		hotel.HotelAddress,
-		hotel.HotelPAN,
-		hotel.HotelNumRooms,
-		hotel.HotelPhone1,
-		hotel.HotelPhone2,
-		hotel.MerchantID,
-		hotel.HotelRoomDescription,
-		hotel.Price,
-		hotel.CreatedAt,
-		hotel.UpdatedAt,
-	)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// Funciton to get all the hotel reservations:
-func (m *PostgresDBRepo) GetAllHotelRooms(merchantID int) ([]models.HotelRoom, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-
-	query := `
-	SELECT id, hotel_name, hotel_room_name, hotel_type, hotel_address, hotel_pan, hotel_num_room, hotel_phone_1, hotel_phone_2, merchant_id, hotel_description, created_at, updated_at
-	FROM hotel_room 
-	WHERE merchant_id = $1
-	`
-	var rooms []models.HotelRoom
-
-	rows, err := m.DB.QueryContext(ctx, query, merchantID)
-	if err != nil {
-		log.Println("Could not execute this query", err)
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var i models.HotelRoom
-		err := rows.Scan(
-			&i.HotelID,
-			&i.HotelName,
-			&i.HotelRoomName,
-			&i.HotelType,
-			&i.HotelAddress,
-			&i.HotelPAN,
-			&i.HotelNumRooms,
-			&i.HotelPhone1,
-			&i.HotelPhone2,
-			&i.MerchantID,
-			&i.HotelRoomDescription,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-		)
-
-		if err != nil {
-			log.Println("Error scanning the rows into variables")
-			return rooms, err
-		}
-
-		rooms = append(rooms, i)
-	}
-	if err = rows.Err(); err != nil {
-		return rooms, err
-	}
-	return rooms, err
-}
-
-// Function to get a room by ID
-func (m *PostgresDBRepo) GetRoomByID(id int) (models.HotelRoom, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-
-	query := `
-	SELECT id, hotel_name, hotel_room_name, hotel_type, hotel_address, hotel_pan, hotel_num_room, hotel_phone_1, hotel_phone_2, merchant_id, hotel_description, created_at, updated_at, price
-	FROM hotel_room 
-	WHERE id = $1 
-	`
-	var i models.HotelRoom
-
-	row := m.DB.QueryRowContext(ctx, query, id)
-	err := row.Scan(
-		&i.HotelID,
-		&i.HotelName,
-		&i.HotelRoomName,
-		&i.HotelType,
-		&i.HotelAddress,
-		&i.HotelPAN,
-		&i.HotelNumRooms,
-		&i.HotelPhone1,
-		&i.HotelPhone2,
-		&i.MerchantID,
-		&i.HotelRoomDescription,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.Price,
-	)
-	if err != nil {
-		return i, err
-	}
-	return i, err
-}
-
-// Function to Delete a Bus
-func (m *PostgresDBRepo) DeleteRoomByID(id int) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-
-	query := `
-	DELETE from hotel_room WHERE id = $1
-	`
-	_, err := m.DB.ExecContext(ctx, query, id)
-	if err != nil {
-		return err
-	}
-	return err
-}
-
-// Function to Update a Bus
-func (m *PostgresDBRepo) UpdateRoom(hotel models.HotelRoom, id int) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-
-	query := `
-	UPDATE hotel_room
-	SET hotel_name = $1, hotel_room_name = $2, hotel_type = $3, hotel_address = $4, hotel_pan = $5, hotel_num_room = $6, hotel_phone_1 = $7, 
-		hotel_phone_2 = $8, merchant_id = $9, hotel_description = $10, created_at = $11, updated_at = $12, price = $13
-	WHERE id = $14
-	`
-	_, err := m.DB.ExecContext(ctx, query,
-		hotel.HotelName,
-		hotel.HotelRoomName,
-		hotel.HotelType,
-		hotel.HotelAddress,
-		hotel.HotelPAN,
-		hotel.HotelNumRooms,
-		hotel.HotelPhone1,
-		hotel.HotelPhone2,
-		hotel.MerchantID,
-		hotel.HotelRoomDescription,
-		hotel.CreatedAt,
-		hotel.UpdatedAt,
-		hotel.Price,
-		id,
-	)
 	if err != nil {
 		return err
 	}

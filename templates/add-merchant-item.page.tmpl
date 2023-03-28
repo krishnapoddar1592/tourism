@@ -29,9 +29,7 @@
         >
       </div>
       <div class="col-sm-6">
-        <a
-          href="/merchant/{{ $user.ID }}/add-hotel"
-          class="btn btn-block btn-lg btn-outline-danger"
+        <a href="#1" class="btn btn-block btn-lg btn-outline-danger"
           >Hotel Room Reservations</a
         >
       </div>
@@ -39,7 +37,7 @@
 
     <div class="row mt-3">
       <div class="col-sm-6">
-        <a href="#1" class="btn btn-block btn-lg btn-outline-warning"
+        <a href="/merchant/{{ $user.ID }}/add-activity" class="btn btn-block btn-lg btn-outline-warning"
           >Recreational Activity Reservations</a
         >
       </div>
@@ -59,59 +57,30 @@
   <h5>Bus:</h5>
 </div>
 {{$bus := index .Data "bus"}}
-{{$hasBus := index .Data "has_bus"}}
+{{$activity:= index .Data "activity"}}
 
-{{$room := index .Data "hotel_room"}}
-{{$hasRoom := index .Data "has_hotel_room"}}
-
-{{if gt $hasBus 0}}
 {{range $bus}}
 <div class="container">
   <div class="title mt-4">
-    <div class="float-sm-left text-secondary">
-      <a href="/merchant/{{ $user.ID }}/add-bus/{{.BusID}}">{{.BusName}}</a>
-    </div>
-    <div class="float-sm-right text-secondary">
-      {{.BusStart}} to {{.BusEnd}}
-    </div>
+    <div class="float-sm-left text-secondary"><a href="/merchant/{{ $user.ID }}/add-bus/{{.BusID}}">{{.BusName}}</a></div>
+    <div class="float-sm-right text-secondary">{{.BusStart}} to {{.BusEnd}}</div>
   </div>
   <br />
   <hr />
 </div>
-{{ end }}
-{{else}}
-<div class="title mt-4">
-  <p class="text-secondary">None</p>
-  <hr />
-</div>
-{{ end }}
-
+{{end}}
 <div class="title mt-3">
-  <h5>Hotel Rooms:</h5>
+  <h5>Recreational Activities :</h5>
 </div>
-{{if gt $hasRoom 0}}
-{{range $room}}
+{{range $activity}}
 <div class="container">
   <div class="title mt-4">
-    <div class="float-sm-left text-secondary">
-      <a
-        href="/merchant/{{ $user.ID }}/add-hotel/{{.HotelID}}"
-        >{{.HotelRoomName}}</a
-      >
-    </div>
-    <div class="float-sm-right text-secondary">
-      {{.HotelName}}: {{.HotelPhone1}}
-    </div>
+    <div class="float-sm-left text-secondary"><a href="/merchant/{{ $user.ID }}/add-activity/{{.ActivityID}}">{{.ActivityName}}</a></div>
+    <div class="float-sm-right text-secondary">Location: {{.Location}}  Price: {{.ActivityPrice}}</div>
   </div>
   <br />
   <hr />
 </div>
-{{ end }}
-{{else}}
-<div class="title mt-4">
-  <p class="text-secondary">None</p>
-  <hr />
-</div>
-{{ end }}
+{{end}}
 
 {{ end }}

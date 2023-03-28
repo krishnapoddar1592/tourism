@@ -72,7 +72,24 @@ type AddBusData struct {
 	BusNumSeats int
 	BusNumPlate string
 	BusPAN      string
-	Price       int
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+
+
+// Type to add the activity form
+type AddActivityData struct {
+	ActivityID      int
+	MerchantID 		int
+	ActivityName     string
+	ActivityDescription    string
+	ActivityPrice  int
+	ActivityDuration    int
+	MaxGroupSize      int
+	AgeRestriction      int
+	PhoneNumber     string
+	Email           string
+	Location string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }
@@ -92,22 +109,4 @@ type BusReservationData struct {
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 	Bus             AddBusData
-}
-
-// Model for the Hotel/ Hotel Room
-type HotelRoom struct {
-	HotelID              int
-	MerchantID           int
-	HotelName            string
-	HotelRoomName        string
-	HotelType            string
-	HotelAddress         string
-	HotelPAN             string
-	HotelNumRooms        int
-	HotelPhone1          string
-	HotelPhone2          string
-	HotelRoomDescription string
-	Price                int
-	CreatedAt            time.Time
-	UpdatedAt            time.Time
 }
